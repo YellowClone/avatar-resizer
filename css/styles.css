@@ -951,3 +951,30 @@ body {
 .pswp__button:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Sidebar repo link */
+.repo-link {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.repo-link a {
+  color: #6c5ce7;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.repo-link a:hover {
+  text-decoration: underline;
+  color: #5a4fcf;
+}
+
+.repo-link-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+}
