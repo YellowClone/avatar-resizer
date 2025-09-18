@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avatar Resizer - Bulk Image Resizing</title>
+
+    <link rel="stylesheet" href="css/photoswipe.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="header">
+        <div class="logo">🌸 Avatar Resizer</div>
+        <p class="subtitle">
+          Resize your avatar to multiple sizes for different platforms.
+        </p>
+      </header>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Left Column - Upload Area and Original Image -->
+        <div class="left-column">
+          <!-- Upload Area -->
+          <div class="upload-area" id="uploadArea">
+            <div class="upload-content">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text">Drop your image here</div>
+              <div class="upload-subtext">
+                or
+                <button type="button" class="browse-btn" id="browseBtn">
+                  browse files
+                </button>
+              </div>
+              <div class="supported-formats">
+                Supports: JPG, PNG, GIF, WEBP, BMP
+              </div>
+            </div>
+            <input
+              type="file"
+              id="fileInput"
+              accept="image/*"
+              style="display: none"
+            />
+          </div>
+
+          <!-- Original Image Preview -->
+          <div
+            class="original-image-section"
+            id="originalImageSection"
+            style="display: none"
+          >
+            <div class="section-header">
+              <h3>Original Image</h3>
+              <button
+                type="button"
+                class="change-image-btn"
+                id="changeImageBtn"
+              >
+                Change Image
+              </button>
+            </div>
+            <div class="image-preview-container">
+              <img
+                id="originalImage"
+                class="original-image"
+                alt="Original image"
+              />
+              <div class="image-info" id="originalImageInfo"></div>
+            </div>
+          </div>
+
+          <!-- Success Message -->
+          <div
+            class="success-message"
+            id="successMessage"
+            style="display: none"
+          >
+            <span class="success-icon">✅</span>
+            Successfully processed
+            <span id="processedCount">0</span> images
+          </div>
+        </div>
+
+        <!-- Right Column - Output Sizes and Actions -->
+        <div class="right-column">
+          <!-- Output Sizes Section -->
+          <div class="output-sizes-section">
+            <div class="section-header">
+              <h3>Output Sizes</h3>
+              <div class="config-buttons">
+                <button
+                  type="button"
+                  class="config-btn"
+                  id="compactViewToggle"
+                  title="Toggle compact view"
+                >
+                  📋
+                </button>
+                <button type="button" class="config-btn" id="exportConfigBtn">
+                  Export
+                </button>
+                <button type="button" class="config-btn" id="importConfigBtn">
+                  Import
+                </button>
+                <input
+                  type="file"
+                  id="configFileInput"
+                  accept=".json"
+                  style="display: none"
+                />
+              </div>
+            </div>
+
+            <!-- Size List -->
+            <div class="sizes-list" id="sizesList">
+              <!-- Size items will be dynamically added here -->
+            </div>
+
+            <!-- Add Size Button -->
+            <button type="button" class="add-size-btn" id="addSizeBtn">
+              <span class="add-icon">+</span> Add Size
+            </button>
+          </div>
+
+          <!-- Actions Section -->
+          <div class="actions-section">
+            <h3>Actions</h3>
+            <div class="auto-process-toggle">
+              <label class="toggle-label" for="autoProcessToggle">
+                <span class="toggle-text">Auto-process images</span>
+                <div class="toggle-switch">
+                  <input
+                    type="checkbox"
+                    id="autoProcessToggle"
+                    class="toggle-input"
+                  />
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+            </div>
+            <button type="button" class="process-btn" id="processBtn" disabled>
+              <span class="process-icon">🔄</span> Process Images
+            </button>
+            <button
+              type="button"
+              class="download-btn"
+              id="downloadBtn"
+              disabled
+            >
+              <span class="download-icon">📦</span> Download All
+            </button>
+            <div class="action-info" id="actionInfo">
+              Upload an image to get started.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Processed Images Section -->
+      <div
+        class="processed-images-section"
+        id="processedImagesSection"
+        style="display: none"
+      >
+        <div class="section-header">
+          <h3>Processed Images</h3>
+          <div class="processed-info" id="processedInfo"></div>
+        </div>
+        <div class="processed-images-grid" id="processedImagesGrid">
+          <!-- Processed images will be dynamically added here -->
+        </div>
+      </div>
+
+      <!-- Edit Size Modal -->
+      <div class="modal-overlay" id="editSizeModal" style="display: none">
+        <div class="modal">
+          <div class="modal-header">
+            <h3 id="modalTitle">Edit Size</h3>
+            <button type="button" class="modal-close" id="modalCloseBtn">
+              ×
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-section">
+              <h4>Basic Settings</h4>
+
+              <div class="form-group">
+                <label for="sizeNameInput">Name</label>
+                <input
+                  type="text"
+                  id="sizeNameInput"
+                  class="form-input"
+                  placeholder="Size name"
+                />
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="widthInput">Width (px)</label>
+                  <input
+                    type="number"
+                    id="widthInput"
+                    class="form-input"
+                    min="1"
+                    placeholder="600"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="heightInput">Height (px)</label>
+                  <input
+                    type="number"
+                    id="heightInput"
+                    class="form-input"
+                    min="1"
+                    placeholder="600"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h4>Advanced Options</h4>
+
+              <div class="form-group">
+                <label for="cropModeSelect">Crop Mode</label>
+                <select id="cropModeSelect" class="form-select">
+                  <option value="fit">Fit (maintain aspect ratio)</option>
+                  <option value="fill">Fill (crop to exact size)</option>
+                  <option value="stretch">Stretch (ignore aspect ratio)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="qualitySelect">Resize Algorithm</label>
+                <select id="qualitySelect" class="form-select">
+                  <option value="3">High Quality (Bicubic - default)</option>
+                  <option value="2">Medium Quality (Bilinear)</option>
+                  <option value="1">Low Quality (Box)</option>
+                  <option value="0">Fastest (Nearest)</option>
+                </select>
+                <div class="form-help">
+                  Controls how the image is scaled. High quality produces
+                  smoother results but is slower.
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="formatSelect">Output Format</label>
+                <select id="formatSelect" class="form-select">
+                  <option value="png">PNG (best quality)</option>
+                  <option value="jpeg">JPEG (smaller size)</option>
+                  <option value="webp">WebP (modern format)</option>
+                  <option value="gif">GIF (animated/legacy)</option>
+                  <option value="ico">ICO (icon format)</option>
+                </select>
+              </div>
+
+              <!-- Format-specific settings -->
+              <div class="format-specific-settings">
+                <!-- JPEG Quality -->
+                <div
+                  class="form-group format-setting jpeg-setting"
+                  style="display: none"
+                >
+                  <label for="jpegQualityInput">JPEG Quality</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="jpegQualityInput"
+                      class="quality-slider"
+                      min="10"
+                      max="100"
+                      value="85"
+                      step="5"
+                    />
+                    <span class="quality-value" id="jpegQualityValue">85%</span>
+                  </div>
+                  <div class="form-help">
+                    Higher values produce better quality but larger file sizes
+                  </div>
+                </div>
+
+                <!-- WebP Quality -->
+                <div
+                  class="form-group format-setting webp-setting"
+                  style="display: none"
+                >
+                  <label for="webpQualityInput">WebP Quality</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="webpQualityInput"
+                      class="quality-slider"
+                      min="10"
+                      max="100"
+                      value="80"
+                      step="5"
+                    />
+                    <span class="quality-value" id="webpQualityValue">80%</span>
+                  </div>
+                  <div class="form-help">
+                    WebP typically produces smaller files than JPEG at similar
+                    quality
+                  </div>
+                </div>
+
+                <!-- PNG Compression -->
+                <div
+                  class="form-group format-setting png-setting"
+                  style="display: none"
+                >
+                  <label for="pngCompressionInput">PNG Compression Level</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="pngCompressionInput"
+                      class="quality-slider"
+                      min="0"
+                      max="9"
+                      value="6"
+                      step="1"
+                    />
+                    <span class="quality-value" id="pngCompressionValue"
+                      >6</span
+                    >
+                  </div>
+                  <div class="form-help">
+                    Higher values produce smaller files but take longer to
+                    process (0=fastest, 9=smallest)
+                  </div>
+                </div>
+
+                <!-- GIF Color Reduction -->
+                <div
+                  class="form-group format-setting gif-setting"
+                  style="display: none"
+                >
+                  <label for="gifColorsInput">Color Palette Size</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="gifColorsInput"
+                      class="quality-slider"
+                      min="2"
+                      max="256"
+                      value="256"
+                      step="1"
+                    />
+                    <span class="quality-value" id="gifColorsValue">256</span>
+                  </div>
+                  <div class="form-help">
+                    Number of colors in the GIF palette (2-256). Lower values
+                    reduce file size but may affect quality
+                  </div>
+                </div>
+
+                <!-- ICO Note -->
+                <div
+                  class="form-group format-setting ico-setting"
+                  style="display: none"
+                >
+                  <div class="form-help">
+                    ICO format is optimized for small icon sizes. Best results
+                    with sizes 16x16, 32x32, 48x48, or 64x64 pixels.
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="shapeSelect">Shape</label>
+                <select id="shapeSelect" class="form-select">
+                  <option value="rectangle">Rectangle</option>
+                  <option value="circle">Circle</option>
+                  <option value="rounded">Rounded Rectangle</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="backgroundColorInput">Background Color</label>
+                <input
+                  type="color"
+                  id="backgroundColorInput"
+                  class="form-color"
+                  value="#ffffff"
+                />
+                <div class="form-help">
+                  Used as background color when transparency is disabled
+                </div>
+              </div>
+
+              <div
+                class="form-group shape-transparency-setting"
+                style="display: none"
+              >
+                <label class="transparency-toggle-label">
+                  <span class="transparency-text">Transparent Background</span>
+                  <div class="toggle-switch">
+                    <input
+                      type="checkbox"
+                      id="transparentBackgroundToggle"
+                      class="toggle-input"
+                    />
+                    <span class="toggle-slider"></span>
+                  </div>
+                </label>
+                <div class="form-help">
+                  Makes the background transparent instead of using the
+                  background color
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="filenamePatternInput">Filename Pattern</label>
+                <input
+                  type="text"
+                  id="filenamePatternInput"
+                  class="form-input"
+                  placeholder="{original_name}_{width}x{height}.{format_ext}"
+                />
+                <div class="form-help">
+                  Available variables: {original_name}, {original_ext},
+                  {original_width}, {original_height}, {name}, {width},
+                  {height}, {format_ext}, {crop_mode}, {shape}, {quality_text},
+                  {date}, {time}, {timestamp}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="modalCancelBtn">
+              Cancel
+            </button>
+            <button type="button" class="btn-primary" id="modalSaveBtn">
+              Save Size
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/lib/pica/pica.min.js"></script>
+    <script src="js/lib/jszip/jszip.min.js"></script>
+    <script src="js/lib/photoswipe/photoswipe.umd.min.js"></script>
+    <script src="js/lib/photoswipe/photoswipe-lightbox.umd.min.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
