@@ -294,8 +294,8 @@ class AvatarResizer {
 
     processBtn.disabled = !this.originalImage;
     actionInfo.textContent = this.originalImage
-      ? `Ready to process ${this.sizes.length} sizes.`
-      : 'Upload an image to get started.';
+      ? `Ready to process ${this.sizes.length} sizes`
+      : 'Upload an image to get started';
   }
 
   hideSuccessMessage() {
