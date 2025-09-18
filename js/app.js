@@ -79,11 +79,6 @@ class AvatarResizer {
       }
     });
 
-    // Drag and drop
-    uploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
-    uploadArea.addEventListener('dragleave', (e) => this.handleDragLeave(e));
-    uploadArea.addEventListener('drop', (e) => this.handleDrop(e));
-
     // Size management
     document
       .getElementById('addSizeBtn')
@@ -170,8 +165,27 @@ class AvatarResizer {
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') this.closeSizeModal();
+      if (e.key === 'Escape') {
+        this.closeSizeModal();
+        this.closeDragOverlay();
+      }
     });
+
+    // Click to close drag overlay
+    document.addEventListener('click', (e) => {
+      if (document.body.classList.contains('global-drag-over')) {
+        this.closeDragOverlay();
+      }
+    });
+
+    // Global drag and drop for images anywhere on the page
+    document.addEventListener('dragover', (e) => this.handleGlobalDragOver(e));
+    document.addEventListener('dragleave', (e) => this.handleGlobalDragLeave(e));
+    document.addEventListener('drop', (e) => this.handleGlobalDrop(e));
+    document.addEventListener('dragend', (e) => this.handleGlobalDragEnd(e));
+
+    // Close modal when mouse leaves the page
+    document.addEventListener('mouseleave', (e) => this.handleMouseLeavePage(e));
   }
 
   initializeUI() {
@@ -191,22 +205,85 @@ class AvatarResizer {
     }
   }
 
-  handleDragOver(event) {
-    event.preventDefault();
-    event.currentTarget.classList.add('dragover');
+  // Global drag and drop handlers for anywhere on the page
+  handleGlobalDragOver(event) {
+    // Only handle file drops, not internal drag operations
+    if (event.dataTransfer.types.includes('Files')) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy';
+
+      // Add visual feedback to the body
+      document.body.classList.add('global-drag-over');
+
+      // Disable sidebar drag elements while file is being dragged
+      this.disableSidebarDrag();
+    }
   }
 
-  handleDragLeave(event) {
-    event.currentTarget.classList.remove('dragover');
+  handleGlobalDragLeave(event) {
+    // Only remove the class if we're leaving the entire document
+    if (event.target === document.documentElement || event.target === document.body) {
+      document.body.classList.remove('global-drag-over');
+
+      // Re-enable sidebar drag elements when drag leaves the page
+      this.enableSidebarDrag();
+    }
   }
 
-  handleDrop(event) {
-    event.preventDefault();
-    event.currentTarget.classList.remove('dragover');
+  handleGlobalDrop(event) {
+    // Only handle file drops, not internal drag operations
+    if (event.dataTransfer.types.includes('Files')) {
+      event.preventDefault();
+      document.body.classList.remove('global-drag-over');
 
-    const files = event.dataTransfer.files;
-    if (files.length > 0 && this.isValidImageFile(files[0])) {
-      this.loadImage(files[0]);
+      // Re-enable sidebar drag elements
+      this.enableSidebarDrag();
+
+      const files = event.dataTransfer.files;
+      if (files.length > 0 && this.isValidImageFile(files[0])) {
+        this.loadImage(files[0]);
+      }
+    }
+  }
+
+  handleGlobalDragEnd(event) {
+    // Clean up drag state when dragging ends (even without dropping)
+    document.body.classList.remove('global-drag-over');
+
+    // Re-enable sidebar drag elements
+    this.enableSidebarDrag();
+  }
+
+  closeDragOverlay() {
+    // Close the drag overlay and clean up drag state
+    document.body.classList.remove('global-drag-over');
+    this.enableSidebarDrag();
+  }
+
+  disableSidebarDrag() {
+    // Disable draggable attribute on all size items
+    const sizeItems = document.querySelectorAll('.size-item');
+    sizeItems.forEach(item => {
+      item.draggable = false;
+    });
+  }
+
+  enableSidebarDrag() {
+    // Re-enable draggable attribute on all size items
+    const sizeItems = document.querySelectorAll('.size-item');
+    sizeItems.forEach(item => {
+      item.draggable = true;
+    });
+  }
+
+  handleMouseLeavePage(event) {
+    // Close modal when mouse leaves the page (cursor exits browser window)
+    if (event.target === document.documentElement) {
+      this.closeSizeModal();
+
+      // Re-enable sidebar drag elements and clean up drag state
+      document.body.classList.remove('global-drag-over');
+      this.enableSidebarDrag();
     }
   }
 
@@ -484,10 +561,10 @@ class AvatarResizer {
       .addEventListener('click', () => this.deleteSize(index));
 
     // Add drag event listeners
-    item.addEventListener('dragstart', (e) => this.handleDragStart(e));
-    item.addEventListener('dragover', (e) => this.handleDragOver(e));
-    item.addEventListener('drop', (e) => this.handleDrop(e));
-    item.addEventListener('dragend', (e) => this.handleDragEnd(e));
+    item.addEventListener('dragstart', (e) => this.handleSizeDragStart(e));
+    item.addEventListener('dragover', (e) => this.handleSizeDragOver(e));
+    item.addEventListener('drop', (e) => this.handleSizeDrop(e));
+    item.addEventListener('dragend', (e) => this.handleSizeDragEnd(e));
 
     return item;
   }
@@ -759,7 +836,7 @@ class AvatarResizer {
   }
 
   // Drag and drop handlers
-  handleDragStart(event) {
+  handleSizeDragStart(event) {
     this.draggedIndex = parseInt(event.target.dataset.index);
     event.target.classList.add('dragging');
     document.getElementById('sizesList').classList.add('drag-active');
@@ -769,7 +846,7 @@ class AvatarResizer {
     event.dataTransfer.setData('text/html', event.target.outerHTML);
   }
 
-  handleDragOver(event) {
+  handleSizeDragOver(event) {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
 
@@ -787,7 +864,7 @@ class AvatarResizer {
     }
   }
 
-  handleDrop(event) {
+  handleSizeDrop(event) {
     event.preventDefault();
 
     const targetElement = event.target.closest('.size-item');
@@ -802,7 +879,7 @@ class AvatarResizer {
     this.cleanupDrag();
   }
 
-  handleDragEnd(event) {
+  handleSizeDragEnd(event) {
     this.cleanupDrag();
   }
 
