@@ -184,6 +184,7 @@ function formatDateTime(date, format) {
 class ImageUploader {
   constructor(app) {
     this.app = app;
+    this.dragCounter = 0;
     this.setupEventListeners();
   }
 
@@ -219,6 +220,27 @@ class ImageUploader {
       }
     });
 
+    // Global drag and drop for files only
+    document.addEventListener('dragenter', (e) => {
+      if (e.dataTransfer.types.includes('Files')) {
+        e.preventDefault();
+        this.dragCounter++;
+        if (this.dragCounter === 1) {
+          document.body.classList.add('global-drag-over');
+        }
+      }
+    });
+
+    document.addEventListener('dragleave', (e) => {
+      if (e.dataTransfer.types.includes('Files')) {
+        e.preventDefault();
+        this.dragCounter--;
+        if (this.dragCounter === 0) {
+          document.body.classList.remove('global-drag-over');
+        }
+      }
+    });
+
     document.addEventListener('dragover', (e) => {
       if (e.dataTransfer.types.includes('Files')) {
         e.preventDefault();
@@ -229,6 +251,8 @@ class ImageUploader {
       if (e.dataTransfer.types.includes('Files')) {
         e.preventDefault();
         e.stopPropagation();
+        this.dragCounter = 0;
+        document.body.classList.remove('global-drag-over');
 
         const files = Array.from(e.dataTransfer.files);
         const imageFiles = files.filter((file) => file.type.startsWith('image/'));
@@ -236,6 +260,31 @@ class ImageUploader {
           this.handleFileSelect([imageFiles[0]]);
         }
       }
+    });
+
+    // Remove global drag class on mouse leave viewport
+    document.addEventListener('mouseleave', () => {
+      this.dragCounter = 0;
+      document.body.classList.remove('global-drag-over');
+    });
+
+    // Remove on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.dragCounter = 0;
+        document.body.classList.remove('global-drag-over');
+      }
+    });
+
+    // Remove on click (left or right)
+    document.addEventListener('click', () => {
+      this.dragCounter = 0;
+      document.body.classList.remove('global-drag-over');
+    });
+
+    document.addEventListener('contextmenu', () => {
+      this.dragCounter = 0;
+      document.body.classList.remove('global-drag-over');
     });
   }
 

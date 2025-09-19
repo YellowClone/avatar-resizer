@@ -1039,7 +1039,7 @@ body.global-drag-over::after {
   background: rgba(108, 92, 231, 0.05);
   backdrop-filter: blur(3px);
   z-index: 9999;
-  pointer-events: none;
+  pointer-events: all;
 }
 
 /* App Message Popup Styles */
