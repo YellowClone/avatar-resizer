@@ -24,7 +24,7 @@
 - Explicitly declare all variables. Use `let` and `const` instead of `var`.
 - Use simple, clear and minimal variable and function names. Favour brevity over descriptiveness.
 - Prefer single-letter names for short-lived variables in small scopes (e.g. loop indices).
-- Create utility functions for repeated code patterns. THIS IS IMPARATIVE
+- Create utility functions for repeated code patterns.
 - Always use `$` for accessing DOM elements by ID. THIS IS IMPARATIVE
 - Always use `$$` for accessing DOM elements by CSS selector. THIS IS IMPARATIVE
 - Don't create HTML elements using JavaScript DOM methods or string concatenation. THIS IS IMPARATIVE.

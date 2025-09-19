@@ -1,5 +1,5 @@
-const $ = id => document.getElementById(id);
-const $$ = selector => document.querySelector(selector);
+const $ = (id) => document.getElementById(id);
+const $$ = (selector) => document.querySelector(selector);
 
 const DEFAULT_SIZES = [
   { name: 'Tiny', width: 100, height: 100 },
@@ -25,50 +25,44 @@ const DEFAULT_SETTINGS = {
   cornerRadius: 10,
   backgroundColor: '#ffffff',
   transparentBackground: false,
-  filenamePattern: '{original_name}_{width}x{height}.{format_ext}'
+  filenamePattern: '{original_name}_{width}x{height}.{format_ext}',
 };
 
-const SUPPORTED_FORMATS = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/bmp',
-];
+const SUPPORTED_FORMATS = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
 
 const OUTPUT_FORMATS = {
   png: {
     name: 'PNG',
     ext: 'png',
-    mime: 'image/png'
+    mime: 'image/png',
   },
   jpeg: {
     name: 'JPEG',
     ext: 'jpg',
-    mime: 'image/jpeg'
+    mime: 'image/jpeg',
   },
   webp: {
     name: 'WebP',
     ext: 'webp',
-    mime: 'image/webp'
+    mime: 'image/webp',
   },
   gif: {
     name: 'GIF',
     ext: 'gif',
-    mime: 'image/gif'
+    mime: 'image/gif',
   },
   ico: {
     name: 'ICO',
     ext: 'ico',
-    mime: 'image/vnd.microsoft.icon'
-  }
+    mime: 'image/vnd.microsoft.icon',
+  },
 };
 
 const QUALITY_NAMES = {
   0: 'Fastest',
   1: 'Low',
   2: 'Medium',
-  3: 'High'
+  3: 'High',
 };
 
 const CENTERING_PRESETS = {
@@ -76,11 +70,11 @@ const CENTERING_PRESETS = {
   'top-center': { h: 50, v: 0 },
   'top-right': { h: 100, v: 0 },
   'center-left': { h: 0, v: 50 },
-  'center': { h: 50, v: 50 },
+  center: { h: 50, v: 50 },
   'center-right': { h: 100, v: 50 },
   'bottom-left': { h: 0, v: 100 },
   'bottom-center': { h: 50, v: 100 },
-  'bottom-right': { h: 100, v: 100 }
+  'bottom-right': { h: 100, v: 100 },
 };
 
 const CENTERING_MAP = {
@@ -92,13 +86,13 @@ const CENTERING_MAP = {
   '100,50': 'center-right',
   '0,100': 'bottom-left',
   '50,100': 'bottom-center',
-  '100,100': 'bottom-right'
+  '100,100': 'bottom-right',
 };
 
 const CROP_MODES = {
   fit: 'Fit',
   fill: 'Fill',
-  stretch: 'Stretch'
+  stretch: 'Stretch',
 };
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
@@ -117,11 +111,13 @@ function formatBytes(bytes) {
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
 }
 
 function getContrastColor(hexColor) {
@@ -147,7 +143,7 @@ function formatFilename(pattern, context) {
     quality_text: context.qualityText,
     date: context.date,
     time: context.time,
-    timestamp: context.timestamp
+    timestamp: context.timestamp,
   };
 
   // Enhanced regex to support quoted formats: {key:"format"} or {key:'format'} or {key:format}
@@ -196,43 +192,43 @@ class ImageUploader {
 
     uploadArea.addEventListener('click', () => fileInput.click());
     changeImageBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', e => this.handleFileSelect(e.target.files));
+    fileInput.addEventListener('change', (e) => this.handleFileSelect(e.target.files));
 
-    uploadArea.addEventListener('dragover', e => {
+    uploadArea.addEventListener('dragover', (e) => {
       e.preventDefault();
       uploadArea.classList.add('drag-over');
     });
 
-    uploadArea.addEventListener('dragleave', e => {
+    uploadArea.addEventListener('dragleave', (e) => {
       e.preventDefault();
       uploadArea.classList.remove('drag-over');
     });
 
-    uploadArea.addEventListener('drop', e => {
+    uploadArea.addEventListener('drop', (e) => {
       e.preventDefault();
       e.stopPropagation();
       uploadArea.classList.remove('drag-over');
 
       const files = Array.from(e.dataTransfer.files);
-      const imageFiles = files.filter(file => file.type.startsWith('image/'));
+      const imageFiles = files.filter((file) => file.type.startsWith('image/'));
       if (imageFiles.length > 0) {
         this.handleFileSelect([imageFiles[0]]);
       }
     });
 
-    document.addEventListener('dragover', e => {
+    document.addEventListener('dragover', (e) => {
       if (e.dataTransfer.types.includes('Files')) {
         e.preventDefault();
       }
     });
 
-    document.addEventListener('drop', e => {
+    document.addEventListener('drop', (e) => {
       if (e.dataTransfer.types.includes('Files')) {
         e.preventDefault();
         e.stopPropagation();
 
         const files = Array.from(e.dataTransfer.files);
-        const imageFiles = files.filter(file => file.type.startsWith('image/'));
+        const imageFiles = files.filter((file) => file.type.startsWith('image/'));
         if (imageFiles.length > 0) {
           this.handleFileSelect([imageFiles[0]]);
         }
@@ -265,7 +261,7 @@ class ImageUploader {
 
   loadImage(file) {
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
         this.app.setOriginalImage(img, file);
@@ -345,7 +341,7 @@ class SizeManager {
     $('compactViewToggle').addEventListener('click', () => this.toggleCompactView());
     $('exportConfigBtn').addEventListener('click', () => this.exportConfig());
     $('importConfigBtn').addEventListener('click', () => $('configFileInput').click());
-    $('configFileInput').addEventListener('change', e => this.importConfig(e.target.files));
+    $('configFileInput').addEventListener('change', (e) => this.importConfig(e.target.files));
   }
 
   loadSizes() {
@@ -353,14 +349,27 @@ class SizeManager {
       const saved = localStorage.getItem('avatarResizer_sizes');
       if (saved) {
         const data = JSON.parse(saved);
-        this.sizes = data.map(settings => new SizeConfiguration(settings));
+        this.sizes = data.map((settings) => new SizeConfiguration(settings));
+
+        // If no sizes loaded, load defaults
+        if (this.sizes.length === 0) {
+          this.loadDefaultSizes();
+        }
       } else {
-        this.sizes = DEFAULT_SIZES.map(size => new SizeConfiguration(size));
+        this.loadDefaultSizes();
       }
     } catch (e) {
-      this.sizes = DEFAULT_SIZES.map(size => new SizeConfiguration(size));
+      this.loadDefaultSizes();
     }
     this.render();
+  }
+
+  loadDefaultSizes() {
+    this.sizes = DEFAULT_SIZES.map((size) => new SizeConfiguration(size));
+  }
+
+  canDeleteSize() {
+    return this.sizes.length > 1;
   }
 
   saveSizes() {
@@ -376,14 +385,14 @@ class SizeManager {
   }
 
   editSize(id) {
-    const size = this.sizes.find(s => s.id === id);
+    const size = this.sizes.find((s) => s.id === id);
     if (size) {
       this.app.sizeEditor.open(size);
     }
   }
 
   duplicateSize(id) {
-    const size = this.sizes.find(s => s.id === id);
+    const size = this.sizes.find((s) => s.id === id);
     if (size) {
       const duplicate = size.clone();
       duplicate.id = generateId();
@@ -395,13 +404,17 @@ class SizeManager {
   }
 
   deleteSize(id) {
-    this.sizes = this.sizes.filter(s => s.id !== id);
+    if (!this.canDeleteSize()) {
+      return;
+    }
+
+    this.sizes = this.sizes.filter((s) => s.id !== id);
     this.saveSizes();
     this.render();
   }
 
   updateSize(size) {
-    const index = this.sizes.findIndex(s => s.id === size.id);
+    const index = this.sizes.findIndex((s) => s.id === size.id);
     if (index !== -1) {
       this.sizes[index] = size;
       this.saveSizes();
@@ -428,7 +441,7 @@ class SizeManager {
     const config = {
       version: '1.0',
       timestamp: Date.now(),
-      sizes: this.sizes
+      sizes: this.sizes,
     };
     const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -447,7 +460,7 @@ class SizeManager {
 
     const file = files[0];
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = (e) => {
       try {
         const config = JSON.parse(e.target.result);
         if (!config.sizes || !Array.isArray(config.sizes)) {
@@ -455,10 +468,20 @@ class SizeManager {
         }
 
         if (confirm('This will replace all current size configurations. Continue?')) {
-          this.sizes = config.sizes.map(settings => new SizeConfiguration(settings));
+          this.sizes = config.sizes.map((settings) => new SizeConfiguration(settings));
+
+          // If imported config has no sizes, load defaults
+          if (this.sizes.length === 0) {
+            this.loadDefaultSizes();
+            this.app.showMessage(
+              'Configuration imported successfully. Default sizes loaded because imported config was empty.'
+            );
+          } else {
+            this.app.showMessage('Configuration imported successfully');
+          }
+
           this.saveSizes();
           this.render();
-          this.app.showMessage('Configuration imported successfully');
         }
       } catch (err) {
         this.app.showMessage('Invalid configuration file', 'error');
@@ -480,7 +503,7 @@ class SizeManager {
       container.classList.remove('compact');
     }
 
-    this.sizes.forEach(size => {
+    this.sizes.forEach((size) => {
       const item = this.createSizeItem(size);
       container.appendChild(item);
     });
@@ -510,11 +533,20 @@ class SizeManager {
         tagsEl.removeChild(tagsEl.firstChild);
       }
       const tags = this.createTags(size);
-      tags.forEach(tag => tagsEl.appendChild(tag));
+      tags.forEach((tag) => tagsEl.appendChild(tag));
     }
 
     this.setupItemEventListeners(item, size);
     this.setupDragListeners(item, size);
+
+    // Disable delete button if this is the only size
+    if (!this.canDeleteSize()) {
+      const deleteBtn = item.querySelector('.delete-btn');
+      deleteBtn.style.opacity = '0.5';
+      deleteBtn.style.cursor = 'not-allowed';
+      deleteBtn.title = 'Cannot delete the last size';
+    }
+
     return item;
   }
 
@@ -527,10 +559,12 @@ class SizeManager {
 
     const bgColor = size.transparentBackground && size.supportsTransparency() ? 'transparent' : size.backgroundColor;
     const displayBgColor = bgColor === 'transparent' ? DEFAULT_SETTINGS.backgroundColor : bgColor;
-    const textColor = bgColor === 'transparent' ? getContrastColor(DEFAULT_SETTINGS.backgroundColor) : getContrastColor(bgColor);
-    const bgStyle = bgColor === 'transparent'
-      ? `background-color: ${DEFAULT_SETTINGS.backgroundColor}`
-      : `background-color: ${bgColor}`;
+    const textColor =
+      bgColor === 'transparent' ? getContrastColor(DEFAULT_SETTINGS.backgroundColor) : getContrastColor(bgColor);
+    const bgStyle =
+      bgColor === 'transparent'
+        ? `background-color: ${DEFAULT_SETTINGS.backgroundColor}`
+        : `background-color: ${bgColor}`;
 
     const tagTemplate = $('sizeTagTemplate');
     const tags = [];
@@ -547,7 +581,9 @@ class SizeManager {
     tags.push(createTag(shape));
     tags.push(createTag(quality));
     tags.push(createTag(centering));
-    tags.push(createTag(bgColor === 'transparent' ? 'Transparent' : displayBgColor, `${bgStyle}; color: ${textColor};`));
+    tags.push(
+      createTag(bgColor === 'transparent' ? 'Transparent' : displayBgColor, `${bgStyle}; color: ${textColor};`)
+    );
 
     return tags;
   }
@@ -556,36 +592,43 @@ class SizeManager {
     item.querySelector('.edit-btn').addEventListener('click', () => this.editSize(size.id));
     item.querySelector('.duplicate-btn').addEventListener('click', () => this.duplicateSize(size.id));
     item.querySelector('.delete-btn').addEventListener('click', () => {
+      if (!this.canDeleteSize()) {
+        alert('Cannot delete the last size. At least one size configuration must remain.');
+        return;
+      }
+
       if (confirm(`Delete "${size.name}" configuration?`)) {
         this.deleteSize(size.id);
       }
     });
+
+    item.addEventListener('dblclick', () => this.editSize(size.id));
   }
 
   setupDragListeners(item, size) {
-    item.addEventListener('dragstart', e => {
+    item.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', size.id);
       item.classList.add('dragging');
       $('sizesList').classList.add('drag-active');
     });
 
-    item.addEventListener('dragend', e => {
+    item.addEventListener('dragend', (e) => {
       item.classList.remove('dragging');
       $('sizesList').classList.remove('drag-active');
       // Remove drag-over from all items
-      document.querySelectorAll('.size-item').forEach(el => el.classList.remove('drag-over'));
+      document.querySelectorAll('.size-item').forEach((el) => el.classList.remove('drag-over'));
     });
 
-    item.addEventListener('dragover', e => {
+    item.addEventListener('dragover', (e) => {
       e.preventDefault();
       item.classList.add('drag-over');
     });
 
-    item.addEventListener('dragleave', e => {
+    item.addEventListener('dragleave', (e) => {
       item.classList.remove('drag-over');
     });
 
-    item.addEventListener('drop', e => {
+    item.addEventListener('drop', (e) => {
       e.preventDefault();
       item.classList.remove('drag-over');
       const draggedId = e.dataTransfer.getData('text/plain');
@@ -598,8 +641,8 @@ class SizeManager {
   }
 
   reorderSizes(draggedId, targetId) {
-    const draggedIndex = this.sizes.findIndex(s => s.id === draggedId);
-    const targetIndex = this.sizes.findIndex(s => s.id === targetId);
+    const draggedIndex = this.sizes.findIndex((s) => s.id === draggedId);
+    const targetIndex = this.sizes.findIndex((s) => s.id === targetId);
 
     if (draggedIndex === -1 || targetIndex === -1) return;
 
@@ -629,20 +672,15 @@ class SizeEditor {
 
     this.setupSliders();
 
-    $('editSizeModal').addEventListener('click', e => {
+    $('editSizeModal').addEventListener('click', (e) => {
       if (e.target === $('editSizeModal')) this.close();
     });
   }
 
   setupSliders() {
-    const sliders = [
-      'jpegQualityInput',
-      'webpQualityInput',
-      'horizontalOffsetInput',
-      'verticalOffsetInput'
-    ];
+    const sliders = ['jpegQualityInput', 'webpQualityInput', 'horizontalOffsetInput', 'verticalOffsetInput'];
 
-    sliders.forEach(id => {
+    sliders.forEach((id) => {
       const slider = $(id);
       const value = $(id.replace('Input', 'Value'));
       slider.addEventListener('input', () => {
@@ -714,7 +752,7 @@ class SizeEditor {
   updateFormatSettings() {
     const format = $('formatSelect').value;
     const formatSettings = document.querySelectorAll('.format-setting');
-    formatSettings.forEach(setting => setting.style.display = 'none');
+    formatSettings.forEach((setting) => (setting.style.display = 'none'));
 
     const transparencySetting = $$('.transparency-setting');
     if (['png', 'webp', 'gif'].includes(format)) {
@@ -772,7 +810,7 @@ class SizeEditor {
       cornerRadius: parseInt($('cornerRadiusInput').value),
       backgroundColor: $('backgroundColorInput').value,
       transparentBackground: $('transparentBackgroundToggle').checked,
-      filenamePattern: $('filenamePatternInput').value || '{original_name}_{width}x{height}.{format_ext}'
+      filenamePattern: $('filenamePatternInput').value || '{original_name}_{width}x{height}.{format_ext}',
     };
 
     const size = new SizeConfiguration(settings);
@@ -835,7 +873,7 @@ class ImageProcessor {
       canvas: outputCanvas,
       blob,
       filename,
-      url: URL.createObjectURL(blob)
+      url: URL.createObjectURL(blob),
     };
   }
 
@@ -854,8 +892,14 @@ class ImageProcessor {
     const sourceAspect = sourceCanvas.width / sourceCanvas.height;
     const targetAspect = size.width / size.height;
 
-    let sourceX = 0, sourceY = 0, sourceWidth = sourceCanvas.width, sourceHeight = sourceCanvas.height;
-    let targetX = 0, targetY = 0, targetWidth = size.width, targetHeight = size.height;
+    let sourceX = 0,
+      sourceY = 0,
+      sourceWidth = sourceCanvas.width,
+      sourceHeight = sourceCanvas.height;
+    let targetX = 0,
+      targetY = 0,
+      targetWidth = size.width,
+      targetHeight = size.height;
 
     // First, prepare the source region based on crop mode
     if (size.cropMode === 'fill') {
@@ -897,7 +941,7 @@ class ImageProcessor {
     // Use pica to resize
     await picaInstance.resize(croppedCanvas, resizedCanvas, {
       quality: size.quality,
-      unsharpAmount: 0
+      unsharpAmount: 0,
     });
 
     // Draw the resized image onto the output canvas
@@ -1003,7 +1047,7 @@ class ImageProcessor {
       date: now.toISOString().split('T')[0],
       time: now.toTimeString().split(' ')[0].replace(/:/g, ''),
       timestamp: Math.floor(now.getTime() / 1000),
-      dateObj: now  // Add date object for advanced formatting
+      dateObj: now, // Add date object for advanced formatting
     };
 
     return formatFilename(size.filenamePattern, context);
@@ -1021,7 +1065,7 @@ class Gallery {
     this.lightbox = new PhotoSwipeLightbox({
       gallery: '#processedImagesGrid',
       children: '.processed-image-link',
-      pswpModule: PhotoSwipe
+      pswpModule: PhotoSwipe,
     });
 
     this.lightbox.on('uiRegister', () => {
@@ -1038,7 +1082,7 @@ class Gallery {
           if (processedImage) {
             this.downloadImage(processedImage);
           }
-        }
+        },
       });
     });
 
