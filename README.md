@@ -35,6 +35,7 @@ All dependencies are included locally, it works offline without an internet conn
 
 - Preset name
 - Target sizes: Width and height (px)
+- Maintain aspect ratio: Toggle to keep original aspect ratio when resizing
 - Crop modes: Fit (contain), Fill (cover/crop), Stretch (ignore aspect)
 - Resize quality: High, Medium, Low, Fastest (Bicubic/Bilinear/Box/Nearest)
 - Output formats: PNG, JPEG, WebP
