@@ -1194,10 +1194,14 @@ class Gallery {
       img.alt = result.filename;
 
       const nameEl = item.querySelector('.processed-image-name');
-      const detailsEl = item.querySelector('.processed-image-details');
+      const dimensionsEl = item.querySelector('.processed-image-dimensions');
+      const sizeEl = item.querySelector('.processed-image-size');
+      const formatEl = item.querySelector('.processed-image-format');
 
       nameEl.textContent = result.filename;
-      detailsEl.textContent = `${result.size.width}×${result.size.height} • ${OUTPUT_FORMATS[result.size.format].name}`;
+      dimensionsEl.textContent = `${result.size.width} × ${result.size.height} pixels`;
+      sizeEl.textContent = formatBytes(result.blob.size);
+      formatEl.textContent = OUTPUT_FORMATS[result.size.format].name.toUpperCase();
 
       const downloadBtn = item.querySelector('.processed-image-download');
       downloadBtn.addEventListener('click', (e) => {
