@@ -488,6 +488,16 @@ class SizeManager {
 
   toggleCompactView() {
     this.isCompactView = !this.isCompactView;
+    this.applyCompactView();
+    this.app.saveSettings();
+  }
+
+  setCompactView(isCompact) {
+    this.isCompactView = isCompact;
+    this.applyCompactView();
+  }
+
+  applyCompactView() {
     const container = $('sizesList');
     const button = $('compactViewToggle');
 
@@ -1290,6 +1300,10 @@ class AvatarResizerApp {
         const settings = JSON.parse(saved);
         this.autoProcess = settings.autoProcess ?? true;
         $('autoProcessToggle').checked = this.autoProcess;
+
+        // Load compact view setting
+        const isCompactView = settings.isCompactView ?? false;
+        this.sizeManager.setCompactView(isCompactView);
       }
     } catch (e) {
       this.autoProcess = true;
@@ -1297,7 +1311,10 @@ class AvatarResizerApp {
   }
 
   saveSettings() {
-    const settings = { autoProcess: this.autoProcess };
+    const settings = {
+      autoProcess: this.autoProcess,
+      isCompactView: this.sizeManager.isCompactView
+    };
     localStorage.setItem('avatarResizer_settings', JSON.stringify(settings));
   }
 
