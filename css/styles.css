@@ -46,10 +46,6 @@ body {
   padding: 0 1rem;
 }
 
-.left-column {
-  min-height: 500px;
-}
-
 .right-column {
   background: white;
   border-radius: 12px;
