@@ -1392,23 +1392,9 @@ class AvatarResizerApp {
     const hasImage = !!this.originalImage;
     const hasSizes = this.sizeManager.sizes.length > 0;
     const hasProcessed = this.processor.processedImages.length > 0;
-    const processedCount = this.processor.processedImages.length;
 
     $('processBtn').disabled = !hasImage || !hasSizes;
     $('downloadBtn').disabled = !hasProcessed;
-
-    let message;
-    if (!hasImage) {
-      message = 'Select an image to get started';
-    } else if (!hasSizes) {
-      message = 'Add size configurations to process';
-    } else if (!hasProcessed) {
-      message = `Ready to process ${this.sizeManager.sizes.length} sizes`;
-    } else {
-      message = `${processedCount} images processed`;
-    }
-
-    $('actionInfo').textContent = message;
   }
 
   showMessage(text, type = 'success') {
