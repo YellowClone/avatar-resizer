@@ -1,1474 +1,1331 @@
-// Avatar Resizer Application
-class AvatarResizer {
-  constructor() {
-    this.originalImage = null;
-    this.originalFile = null;
-    this.processedImages = [];
-    this.lightbox = null;
-    this.currentEditIndex = -1;
-    this.autoProcess = this.loadAutoProcessSetting();
-    this.compactView = this.loadCompactViewSetting();
-    this.draggedIndex = undefined;
+const $ = id => document.getElementById(id);
+const $$ = selector => document.querySelector(selector);
 
-    // Default size configurations
-    this.defaultSizes = [
-      {
-        name: 'Medium',
-        width: 600,
-        height: 600,
-        cropMode: 'fit',
-        quality: 3,
-        format: 'png',
-        shape: 'rectangle',
-        backgroundColor: '#ffffff',
-        filenamePattern: '{original_name}_{width}x{height}.{format_ext}',
-        jpegQuality: 85,
-        webpQuality: 80,
-        pngCompression: 6,
-        gifColors: 256,
-        transparentBackground: false,
-      },
-      {
-        name: 'Small',
-        width: 200,
-        height: 200,
-        cropMode: 'fit',
-        quality: 3,
-        format: 'png',
-        shape: 'rectangle',
-        backgroundColor: '#ffffff',
-        filenamePattern: '{original_name}_{width}x{height}.{format_ext}',
-        jpegQuality: 85,
-        webpQuality: 80,
-        pngCompression: 6,
-        gifColors: 256,
-        transparentBackground: false,
-      },
-    ];
+const DEFAULT_SIZES = [
+  { name: 'Tiny', width: 100, height: 100 },
+  { name: 'Small', width: 200, height: 200 },
+  { name: 'Medium', width: 400, height: 400 },
+  { name: 'Large', width: 800, height: 800 },
+];
 
-    this.sizes = this.loadSizesFromStorage();
-    this.pica = pica();
+const DEFAULT_SETTINGS = {
+  name: 'Resize',
+  width: 400,
+  height: 400,
+  cropMode: 'fit',
+  horizontalOffset: 50,
+  verticalOffset: 50,
+  quality: 3,
+  format: 'png',
+  jpegQuality: 90,
+  webpQuality: 90,
+  gifColors: 256,
+  pngCompressionLevel: 6,
+  shape: 'rectangle',
+  cornerRadius: 10,
+  backgroundColor: '#ffffff',
+  transparentBackground: false,
+  filenamePattern: '{original_name}_{width}x{height}.{format_ext}'
+};
 
-    this.initializeEventListeners();
-    this.initializeUI();
-    this.renderSizes();
-    this.initializePhotoSwipe();
+const SUPPORTED_FORMATS = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/bmp',
+];
+
+const OUTPUT_FORMATS = {
+  png: {
+    name: 'PNG',
+    ext: 'png',
+    mime: 'image/png'
+  },
+  jpeg: {
+    name: 'JPEG',
+    ext: 'jpg',
+    mime: 'image/jpeg'
+  },
+  webp: {
+    name: 'WebP',
+    ext: 'webp',
+    mime: 'image/webp'
+  },
+  gif: {
+    name: 'GIF',
+    ext: 'gif',
+    mime: 'image/gif'
+  },
+  ico: {
+    name: 'ICO',
+    ext: 'ico',
+    mime: 'image/vnd.microsoft.icon'
+  }
+};
+
+const QUALITY_NAMES = {
+  0: 'Fastest',
+  1: 'Low',
+  2: 'Medium',
+  3: 'High'
+};
+
+const CENTERING_PRESETS = {
+  'top-left': { h: 0, v: 0 },
+  'top-center': { h: 50, v: 0 },
+  'top-right': { h: 100, v: 0 },
+  'center-left': { h: 0, v: 50 },
+  'center': { h: 50, v: 50 },
+  'center-right': { h: 100, v: 50 },
+  'bottom-left': { h: 0, v: 100 },
+  'bottom-center': { h: 50, v: 100 },
+  'bottom-right': { h: 100, v: 100 }
+};
+
+const CENTERING_MAP = {
+  '0,0': 'top-left',
+  '50,0': 'top-center',
+  '100,0': 'top-right',
+  '0,50': 'center-left',
+  '50,50': 'center',
+  '100,50': 'center-right',
+  '0,100': 'bottom-left',
+  '50,100': 'bottom-center',
+  '100,100': 'bottom-right'
+};
+
+const CROP_MODES = {
+  fit: 'Fit',
+  fill: 'Fill',
+  stretch: 'Stretch'
+};
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+const generateId = () => Math.random().toString(36).slice(2, 11);
+
+const picaInstance = pica();
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
+function getContrastColor(hexColor) {
+  const rgb = hexToRgb(hexColor);
+  if (!rgb) return 'inherit';
+  const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+  return brightness > 155 ? '#inherit' : '#ffffff';
+}
+
+function formatFilename(pattern, context) {
+  const placeholders = {
+    original_name: context.originalName,
+    original_ext: context.originalExt,
+    original_width: context.originalWidth,
+    original_height: context.originalHeight,
+    name: context.name,
+    width: context.width,
+    height: context.height,
+    format: context.format,
+    format_ext: context.formatExt,
+    crop_mode: context.cropMode,
+    shape: context.shape,
+    quality_text: context.qualityText,
+    date: context.date,
+    time: context.time,
+    timestamp: context.timestamp
+  };
+
+  // Enhanced regex to support quoted formats: {key:"format"} or {key:'format'} or {key:format}
+  return pattern.replace(/{([^}:]+)(?::(['"]?)([^}]+)\2)?}/g, (match, key, quote, format) => {
+    let value = placeholders[key];
+    if (value === undefined) return match;
+
+    if (format) {
+      // Date/time formatting for date, time, and timestamp placeholders
+      if ((key === 'date' || key === 'time' || key === 'timestamp') && context.dateObj) {
+        return formatDateTime(context.dateObj, format);
+      }
+      // Number padding
+      else if (typeof value === 'number') {
+        const padding = parseInt(format, 10);
+        if (!isNaN(padding)) {
+          value = value.toString().padStart(padding, '0');
+        }
+      }
+      // String transformations
+      else if (typeof value === 'string') {
+        if (format === 'upper') value = value.toUpperCase();
+        else if (format === 'lower') value = value.toLowerCase();
+      }
+    }
+
+    return value;
+  });
+}
+
+function formatDateTime(date, format) {
+  return dayjs(date).format(format);
+}
+
+class ImageUploader {
+  constructor(app) {
+    this.app = app;
+    this.setupEventListeners();
   }
 
-  // Initialize all event listeners
-  initializeEventListeners() {
-    // File upload
-    const fileInput = document.getElementById('fileInput');
-    const uploadArea = document.getElementById('uploadArea');
-    const browseBtn = document.getElementById('browseBtn');
-    const changeImageBtn = document.getElementById('changeImageBtn');
+  setupEventListeners() {
+    const uploadArea = $('uploadArea');
+    const fileInput = $('fileInput');
+    const browseBtn = $('browseBtn');
+    const changeImageBtn = $('changeImageBtn');
 
-    browseBtn.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('click', () => fileInput.click());
     changeImageBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+    fileInput.addEventListener('change', e => this.handleFileSelect(e.target.files));
 
-    // Make entire upload area clickable when no image is loaded
-    uploadArea.addEventListener('click', (e) => {
-      // Only trigger file dialog if no image is loaded and not clicking on the browse button
-      if (
-        !this.originalImage &&
-        e.target !== browseBtn &&
-        !browseBtn.contains(e.target)
-      ) {
-        fileInput.click();
+    uploadArea.addEventListener('dragover', e => {
+      e.preventDefault();
+      uploadArea.classList.add('drag-over');
+    });
+
+    uploadArea.addEventListener('dragleave', e => {
+      e.preventDefault();
+      uploadArea.classList.remove('drag-over');
+    });
+
+    uploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadArea.classList.remove('drag-over');
+
+      const files = Array.from(e.dataTransfer.files);
+      const imageFiles = files.filter(file => file.type.startsWith('image/'));
+      if (imageFiles.length > 0) {
+        this.handleFileSelect([imageFiles[0]]);
       }
     });
 
-    // Size management
-    document
-      .getElementById('addSizeBtn')
-      .addEventListener('click', () => this.openSizeModal());
-    document
-      .getElementById('compactViewToggle')
-      .addEventListener('click', () => this.toggleCompactView());
-
-    // Config import/export
-    document
-      .getElementById('exportConfigBtn')
-      .addEventListener('click', () => this.exportConfig());
-    document
-      .getElementById('importConfigBtn')
-      .addEventListener('click', () =>
-        document.getElementById('configFileInput').click()
-      );
-    document
-      .getElementById('configFileInput')
-      .addEventListener('change', (e) => this.importConfig(e));
-
-    // Processing and download
-    document
-      .getElementById('processBtn')
-      .addEventListener('click', () => this.processImages());
-    document
-      .getElementById('downloadBtn')
-      .addEventListener('click', () => this.downloadAll());
-
-    // Auto-process toggle
-    document
-      .getElementById('autoProcessToggle')
-      .addEventListener('change', (e) =>
-        this.toggleAutoProcess(e.target.checked)
-      );
-
-    // Modal controls
-    document
-      .getElementById('modalCloseBtn')
-      .addEventListener('click', () => this.closeSizeModal());
-    document
-      .getElementById('modalCancelBtn')
-      .addEventListener('click', () => this.closeSizeModal());
-    document
-      .getElementById('modalSaveBtn')
-      .addEventListener('click', () => this.saveSizeConfig());
-    document.getElementById('editSizeModal').addEventListener('click', (e) => {
-      if (e.target.id === 'editSizeModal') this.closeSizeModal();
-    });
-
-    // Format-specific settings
-    document
-      .getElementById('formatSelect')
-      .addEventListener('change', (e) =>
-        this.toggleFormatSettings(e.target.value)
-      );
-    document
-      .getElementById('jpegQualityInput')
-      .addEventListener('input', (e) =>
-        this.updateQualityDisplay('jpeg', e.target.value)
-      );
-    document
-      .getElementById('webpQualityInput')
-      .addEventListener('input', (e) =>
-        this.updateQualityDisplay('webp', e.target.value)
-      );
-    document
-      .getElementById('pngCompressionInput')
-      .addEventListener('input', (e) =>
-        this.updateQualityDisplay('png', e.target.value)
-      );
-    document
-      .getElementById('gifColorsInput')
-      .addEventListener('input', (e) =>
-        this.updateQualityDisplay('gif', e.target.value)
-      );
-
-    // Shape-specific settings
-    document
-      .getElementById('shapeSelect')
-      .addEventListener('change', (e) =>
-        this.toggleShapeSettings(e.target.value)
-      );
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        this.closeSizeModal();
-        this.closeDragOverlay();
+    document.addEventListener('dragover', e => {
+      if (e.dataTransfer.types.includes('Files')) {
+        e.preventDefault();
       }
     });
 
-    // Click to close drag overlay
-    document.addEventListener('click', (e) => {
-      if (document.body.classList.contains('global-drag-over')) {
-        this.closeDragOverlay();
+    document.addEventListener('drop', e => {
+      if (e.dataTransfer.types.includes('Files')) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const files = Array.from(e.dataTransfer.files);
+        const imageFiles = files.filter(file => file.type.startsWith('image/'));
+        if (imageFiles.length > 0) {
+          this.handleFileSelect([imageFiles[0]]);
+        }
       }
     });
-
-    // Global drag and drop for images anywhere on the page
-    document.addEventListener('dragover', (e) => this.handleGlobalDragOver(e));
-    document.addEventListener('dragleave', (e) => this.handleGlobalDragLeave(e));
-    document.addEventListener('drop', (e) => this.handleGlobalDrop(e));
-    document.addEventListener('dragend', (e) => this.handleGlobalDragEnd(e));
-
-    // Close modal when mouse leaves the page
-    document.addEventListener('mouseleave', (e) => this.handleMouseLeavePage(e));
   }
 
-  initializeUI() {
-    // Set initial state of auto-process toggle
-    const autoProcessToggle = document.getElementById('autoProcessToggle');
-    autoProcessToggle.checked = this.autoProcess;
+  handleFileSelect(files) {
+    if (!files || files.length === 0) return;
 
-    // Set initial state of compact view
-    this.updateCompactViewUI();
+    const file = files[0];
+    if (!this.validateFile(file)) return;
+
+    this.loadImage(file);
   }
 
-  // File handling methods
-  handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (file && this.isValidImageFile(file)) {
-      this.loadImage(file);
-    }
-  }
-
-  // Global drag and drop handlers for anywhere on the page
-  handleGlobalDragOver(event) {
-    // Only handle file drops, not internal drag operations
-    if (event.dataTransfer.types.includes('Files')) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = 'copy';
-
-      // Add visual feedback to the body
-      document.body.classList.add('global-drag-over');
-
-      // Disable sidebar drag elements while file is being dragged
-      this.disableSidebarDrag();
-    }
-  }
-
-  handleGlobalDragLeave(event) {
-    // Only remove the class if we're leaving the entire document
-    if (event.target === document.documentElement || event.target === document.body) {
-      document.body.classList.remove('global-drag-over');
-
-      // Re-enable sidebar drag elements when drag leaves the page
-      this.enableSidebarDrag();
-    }
-  }
-
-  handleGlobalDrop(event) {
-    // Only handle file drops, not internal drag operations
-    if (event.dataTransfer.types.includes('Files')) {
-      event.preventDefault();
-      document.body.classList.remove('global-drag-over');
-
-      // Re-enable sidebar drag elements
-      this.enableSidebarDrag();
-
-      const files = event.dataTransfer.files;
-      if (files.length > 0 && this.isValidImageFile(files[0])) {
-        this.loadImage(files[0]);
-      }
-    }
-  }
-
-  handleGlobalDragEnd(event) {
-    // Clean up drag state when dragging ends (even without dropping)
-    document.body.classList.remove('global-drag-over');
-
-    // Re-enable sidebar drag elements
-    this.enableSidebarDrag();
-  }
-
-  closeDragOverlay() {
-    // Close the drag overlay and clean up drag state
-    document.body.classList.remove('global-drag-over');
-    this.enableSidebarDrag();
-  }
-
-  disableSidebarDrag() {
-    // Disable draggable attribute on all size items
-    const sizeItems = document.querySelectorAll('.size-item');
-    sizeItems.forEach(item => {
-      item.draggable = false;
-    });
-  }
-
-  enableSidebarDrag() {
-    // Re-enable draggable attribute on all size items
-    const sizeItems = document.querySelectorAll('.size-item');
-    sizeItems.forEach(item => {
-      item.draggable = true;
-    });
-  }
-
-  handleMouseLeavePage(event) {
-    // Close modal when mouse leaves the page (cursor exits browser window)
-    if (event.target === document.documentElement) {
-      this.closeSizeModal();
-
-      // Re-enable sidebar drag elements and clean up drag state
-      document.body.classList.remove('global-drag-over');
-      this.enableSidebarDrag();
-    }
-  }
-
-  isValidImageFile(file) {
-    const validTypes = [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'image/bmp',
-    ];
-    if (!validTypes.includes(file.type)) {
-      alert('Please select a valid image file (JPG, PNG, GIF, WEBP, BMP)');
+  validateFile(file) {
+    if (!SUPPORTED_FORMATS.includes(file.type)) {
+      this.showError('Unsupported file format. Please select a JPEG, PNG, GIF, WebP, or BMP image.');
       return false;
     }
-    if (file.size > 50 * 1024 * 1024) {
-      // 50MB limit
-      alert('File size must be less than 50MB');
+
+    if (file.size > MAX_FILE_SIZE) {
+      this.showError(`File too large. Maximum size is ${formatBytes(MAX_FILE_SIZE)}.`);
       return false;
     }
+
     return true;
   }
 
-  async loadImage(file) {
-    try {
-      this.originalFile = file;
-
-      // Create image element
+  loadImage(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
       const img = new Image();
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      img.onload = () => {
+        this.app.setOriginalImage(img, file);
+      };
+      img.onerror = () => {
+        this.showError('Failed to load image. Please try a different file.');
+      };
+      img.src = e.target.result;
+    };
+    reader.onerror = () => {
+      this.showError('Failed to read file. Please try again.');
+    };
+    reader.readAsDataURL(file);
+  }
 
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = URL.createObjectURL(file);
-      });
+  showError(message) {
+    this.app.showMessage(message, 'error');
+  }
+}
 
-      // Store original image
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      ctx.drawImage(img, 0, 0);
-      this.originalImage = canvas;
+class SizeConfiguration {
+  constructor(settings = {}) {
+    this.id = settings.id ?? generateId();
+    this.name = settings.name ?? DEFAULT_SETTINGS.name;
+    this.width = settings.width ?? DEFAULT_SETTINGS.width;
+    this.height = settings.height ?? DEFAULT_SETTINGS.height;
+    this.cropMode = settings.cropMode ?? DEFAULT_SETTINGS.cropMode;
+    this.horizontalOffset = settings.horizontalOffset ?? DEFAULT_SETTINGS.horizontalOffset;
+    this.verticalOffset = settings.verticalOffset ?? DEFAULT_SETTINGS.verticalOffset;
+    this.quality = settings.quality ?? DEFAULT_SETTINGS.quality;
+    this.format = settings.format ?? DEFAULT_SETTINGS.format;
+    this.jpegQuality = settings.jpegQuality ?? DEFAULT_SETTINGS.jpegQuality;
+    this.webpQuality = settings.webpQuality ?? DEFAULT_SETTINGS.webpQuality;
+    this.gifColors = settings.gifColors ?? DEFAULT_SETTINGS.gifColors;
+    this.pngCompressionLevel = settings.pngCompressionLevel ?? DEFAULT_SETTINGS.pngCompressionLevel;
+    this.shape = settings.shape ?? DEFAULT_SETTINGS.shape;
+    this.cornerRadius = settings.cornerRadius ?? DEFAULT_SETTINGS.cornerRadius;
+    this.backgroundColor = settings.backgroundColor ?? DEFAULT_SETTINGS.backgroundColor;
+    this.transparentBackground = settings.transparentBackground ?? DEFAULT_SETTINGS.transparentBackground;
+    this.filenamePattern = settings.filenamePattern ?? DEFAULT_SETTINGS.filenamePattern;
+  }
 
-      // Update UI
-      this.showOriginalImage(img, file);
-      this.updateActionButtons();
-      this.hideSuccessMessage();
-      this.hideProcessedImages();
+  clone() {
+    return new SizeConfiguration(this);
+  }
 
-      // Auto-process if enabled
-      if (this.autoProcess) {
-        // Add a small delay to ensure UI is updated
-        setTimeout(() => {
-          this.processImages();
-        }, 100);
+  getCenteringPreset() {
+    const key = `${this.horizontalOffset},${this.verticalOffset}`;
+    return CENTERING_MAP[key] ?? 'custom';
+  }
+
+  getQualityText() {
+    const qualityName = QUALITY_NAMES[this.quality];
+    if (this.format === 'jpeg') return `${this.jpegQuality}%`;
+    if (this.format === 'webp') return `${this.webpQuality}%`;
+    if (this.format === 'png') return `Level ${this.pngCompressionLevel}`;
+    if (this.format === 'gif') return `${this.gifColors} colors`;
+    return qualityName;
+  }
+
+  supportsTransparency() {
+    return ['png', 'webp', 'gif'].includes(this.format);
+  }
+}
+
+class SizeManager {
+  constructor(app) {
+    this.app = app;
+    this.sizes = [];
+    this.isCompactView = false;
+    this.setupEventListeners();
+    this.loadSizes();
+  }
+
+  setupEventListeners() {
+    $('addSizeBtn').addEventListener('click', () => this.addSize());
+    $('compactViewToggle').addEventListener('click', () => this.toggleCompactView());
+    $('exportConfigBtn').addEventListener('click', () => this.exportConfig());
+    $('importConfigBtn').addEventListener('click', () => $('configFileInput').click());
+    $('configFileInput').addEventListener('change', e => this.importConfig(e.target.files));
+  }
+
+  loadSizes() {
+    try {
+      const saved = localStorage.getItem('avatarResizer_sizes');
+      if (saved) {
+        const data = JSON.parse(saved);
+        this.sizes = data.map(settings => new SizeConfiguration(settings));
+      } else {
+        this.sizes = DEFAULT_SIZES.map(size => new SizeConfiguration(size));
       }
+    } catch (e) {
+      this.sizes = DEFAULT_SIZES.map(size => new SizeConfiguration(size));
+    }
+    this.render();
+  }
 
-      URL.revokeObjectURL(img.src);
-    } catch (error) {
-      console.error('Error loading image:', error);
-      alert('Failed to load image. Please try a different file.');
+  saveSizes() {
+    localStorage.setItem('avatarResizer_sizes', JSON.stringify(this.sizes));
+  }
+
+  addSize(settings = {}) {
+    const size = new SizeConfiguration(settings);
+    this.sizes.push(size);
+    this.saveSizes();
+    this.render();
+    this.editSize(size.id);
+  }
+
+  editSize(id) {
+    const size = this.sizes.find(s => s.id === id);
+    if (size) {
+      this.app.sizeEditor.open(size);
     }
   }
 
-  showOriginalImage(img, file) {
-    const uploadArea = document.getElementById('uploadArea');
-    const originalSection = document.getElementById('originalImageSection');
-    const originalImg = document.getElementById('originalImage');
-    const imageInfo = document.getElementById('originalImageInfo');
-
-    uploadArea.style.display = 'none';
-    originalSection.style.display = 'block';
-
-    originalImg.src = img.src;
-    imageInfo.textContent = `${img.naturalWidth} × ${
-      img.naturalHeight
-    }px • ${this.formatFileSize(file.size)}`;
-  }
-
-  updateActionButtons() {
-    const processBtn = document.getElementById('processBtn');
-    const actionInfo = document.getElementById('actionInfo');
-
-    processBtn.disabled = !this.originalImage;
-    actionInfo.textContent = this.originalImage
-      ? `Ready to process ${this.sizes.length} sizes`
-      : 'Upload an image to get started';
-  }
-
-  hideSuccessMessage() {
-    document.getElementById('successMessage').style.display = 'none';
-  }
-
-  hideProcessedImages() {
-    document.getElementById('processedImagesSection').style.display = 'none';
-    this.processedImages = [];
-  }
-
-  formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
-  // Size management methods
-  loadSizesFromStorage() {
-    try {
-      const stored = localStorage.getItem('avatarResizerSizes');
-      const loadedSizes = stored ? JSON.parse(stored) : [...this.defaultSizes];
-
-      // Add default values for properties that might be missing from older configs
-      return loadedSizes.map((size) => ({
-        ...size,
-        filenamePattern:
-          size.filenamePattern ||
-          '{original_name}_{width}x{height}.{format_ext}',
-        jpegQuality: size.jpegQuality || 85,
-        webpQuality: size.webpQuality || 80,
-        pngCompression: size.pngCompression || 6,
-        transparentBackground: size.transparentBackground || false,
-      }));
-    } catch (error) {
-      console.error('Error loading sizes from storage:', error);
-      return [...this.defaultSizes];
+  duplicateSize(id) {
+    const size = this.sizes.find(s => s.id === id);
+    if (size) {
+      const duplicate = size.clone();
+      duplicate.id = generateId();
+      duplicate.name = `${size.name} Copy`;
+      this.sizes.push(duplicate);
+      this.saveSizes();
+      this.render();
     }
   }
 
-  saveSizesToStorage() {
-    try {
-      localStorage.setItem('avatarResizerSizes', JSON.stringify(this.sizes));
-    } catch (error) {
-      console.error('Error saving sizes to storage:', error);
-    }
+  deleteSize(id) {
+    this.sizes = this.sizes.filter(s => s.id !== id);
+    this.saveSizes();
+    this.render();
   }
 
-  loadAutoProcessSetting() {
-    try {
-      const saved = localStorage.getItem('avatarResizerAutoProcess');
-      return saved ? JSON.parse(saved) : false;
-    } catch (error) {
-      console.error('Error loading auto-process setting:', error);
-      return false;
-    }
-  }
-
-  saveAutoProcessSetting() {
-    try {
-      localStorage.setItem(
-        'avatarResizerAutoProcess',
-        JSON.stringify(this.autoProcess)
-      );
-    } catch (error) {
-      console.error('Error saving auto-process setting:', error);
-    }
-  }
-
-  toggleAutoProcess(enabled) {
-    this.autoProcess = enabled;
-    this.saveAutoProcessSetting();
-  }
-
-  loadCompactViewSetting() {
-    try {
-      const saved = localStorage.getItem('avatarResizerCompactView');
-      return saved ? JSON.parse(saved) : false;
-    } catch (error) {
-      console.error('Error loading compact view setting:', error);
-      return false;
-    }
-  }
-
-  saveCompactViewSetting() {
-    try {
-      localStorage.setItem(
-        'avatarResizerCompactView',
-        JSON.stringify(this.compactView)
-      );
-    } catch (error) {
-      console.error('Error saving compact view setting:', error);
+  updateSize(size) {
+    const index = this.sizes.findIndex(s => s.id === size.id);
+    if (index !== -1) {
+      this.sizes[index] = size;
+      this.saveSizes();
+      this.render();
     }
   }
 
   toggleCompactView() {
-    this.compactView = !this.compactView;
-    this.saveCompactViewSetting();
-    this.updateCompactViewUI();
-  }
-
-  updateCompactViewUI() {
-    const sizesList = document.getElementById('sizesList');
-    const toggleBtn = document.getElementById('compactViewToggle');
-
-    if (this.compactView) {
-      sizesList.classList.add('compact');
-      toggleBtn.textContent = '�';
-      toggleBtn.title = 'Exit compact view';
+    this.isCompactView = !this.isCompactView;
+    const container = $('sizesList');
+    if (this.isCompactView) {
+      container.classList.add('compact');
     } else {
-      sizesList.classList.remove('compact');
-      toggleBtn.textContent = '📋';
-      toggleBtn.title = 'Toggle compact view';
+      container.classList.remove('compact');
     }
+    this.render();
   }
 
-  renderSizes() {
-    const sizesList = document.getElementById('sizesList');
-    sizesList.innerHTML = '';
-
-    this.sizes.forEach((size, index) => {
-      const sizeItem = this.createSizeItem(size, index);
-      sizesList.appendChild(sizeItem);
-    });
-
-    this.updateActionButtons();
-  }
-
-  createSizeItem(size, index) {
-    const item = document.createElement('div');
-    item.className = 'size-item';
-    item.draggable = true;
-    item.dataset.index = index;
-
-    // Get format-specific quality info
-    const formatQuality = this.getFormatQualityText(size);
-
-    // Get transparency info
-    const transparencyInfo = this.getTransparencyText(size);
-
-    item.innerHTML = `
-            <div class="size-header">
-                <div class="size-info">
-                    <span class="size-name">${size.name}</span>
-                    <span class="size-dimensions">${size.width} × ${
-      size.height
-    }px</span>
-                </div>
-                <div class="size-actions">
-                    <button type="button" class="size-action-btn edit-btn" title="Edit">✏️</button>
-                    <button type="button" class="size-action-btn duplicate-btn" title="Duplicate">📋</button>
-                    <button type="button" class="size-action-btn delete-btn" title="Delete">🗑️</button>
-                </div>
-            </div>
-            <div class="size-tags">
-                <span class="size-tag">${size.format.toUpperCase()}</span>
-                <span class="size-tag">${size.cropMode}</span>
-                <span class="size-tag">${size.shape}</span>
-                <span class="size-tag">${this.getQualityText(
-                  size.quality
-                )}</span>
-                ${
-                  formatQuality
-                    ? `<span class="size-tag">${formatQuality}</span>`
-                    : ''
-                }
-                ${
-                  transparencyInfo
-                    ? `<span class="size-tag">${transparencyInfo}</span>`
-                    : ''
-                }
-            </div>
-        `;
-
-    // Add event listeners
-    item
-      .querySelector('.edit-btn')
-      .addEventListener('click', () => this.editSize(index));
-    item
-      .querySelector('.duplicate-btn')
-      .addEventListener('click', () => this.duplicateSize(index));
-    item
-      .querySelector('.delete-btn')
-      .addEventListener('click', () => this.deleteSize(index));
-
-    // Add drag event listeners
-    item.addEventListener('dragstart', (e) => this.handleSizeDragStart(e));
-    item.addEventListener('dragover', (e) => this.handleSizeDragOver(e));
-    item.addEventListener('drop', (e) => this.handleSizeDrop(e));
-    item.addEventListener('dragend', (e) => this.handleSizeDragEnd(e));
-
-    return item;
-  }
-
-  getFormatQualityText(size) {
-    switch (size.format) {
-      case 'jpeg':
-        return `${size.jpegQuality || 85}%`;
-      case 'webp':
-        return `${size.webpQuality || 80}%`;
-      case 'png':
-        const compression = size.pngCompression || 6;
-        return `Comp ${compression}`;
-      case 'gif':
-        const colors = size.gifColors || 256;
-        return `${colors} colors`;
-      case 'ico':
-        return 'Icon';
-      default:
-        return '';
-    }
-  }
-
-  getTransparencyText(size) {
-    if (
-      (size.shape === 'circle' || size.shape === 'rounded') &&
-      size.transparentBackground
-    ) {
-      return 'Transparent';
-    }
-    return '';
-  }
-
-  getQualityText(quality) {
-    const qualityMap = {
-      0: 'Fastest',
-      1: 'Low Quality',
-      2: 'Medium Quality',
-      3: 'High Quality',
-    };
-    return qualityMap[quality] || 'High Quality';
-  }
-
-  openSizeModal(editIndex = -1) {
-    this.currentEditIndex = editIndex;
-    const modal = document.getElementById('editSizeModal');
-    const title = document.getElementById('modalTitle');
-
-    title.textContent = editIndex >= 0 ? 'Edit Size' : 'Add Size';
-
-    if (editIndex >= 0) {
-      this.populateModalFields(this.sizes[editIndex]);
-    } else {
-      this.resetModalFields();
-    }
-
-    modal.style.display = 'flex';
-    document.getElementById('sizeNameInput').focus();
-  }
-
-  populateModalFields(size) {
-    document.getElementById('sizeNameInput').value = size.name;
-    document.getElementById('widthInput').value = size.width;
-    document.getElementById('heightInput').value = size.height;
-    document.getElementById('cropModeSelect').value = size.cropMode;
-    document.getElementById('qualitySelect').value = size.quality;
-    document.getElementById('formatSelect').value = size.format;
-    document.getElementById('shapeSelect').value = size.shape;
-    document.getElementById('backgroundColorInput').value =
-      size.backgroundColor;
-    document.getElementById('filenamePatternInput').value =
-      size.filenamePattern || '{original_name}_{width}x{height}.{format_ext}';
-
-    // Format-specific settings
-    document.getElementById('jpegQualityInput').value = size.jpegQuality || 85;
-    document.getElementById('webpQualityInput').value = size.webpQuality || 80;
-    document.getElementById('pngCompressionInput').value =
-      size.pngCompression || 6;
-    document.getElementById('gifColorsInput').value = size.gifColors || 256;
-
-    // Shape-specific settings
-    document.getElementById('transparentBackgroundToggle').checked =
-      size.transparentBackground || false;
-
-    // Update display values
-    this.updateQualityDisplay('jpeg', size.jpegQuality || 85);
-    this.updateQualityDisplay('webp', size.webpQuality || 80);
-    this.updateQualityDisplay('png', size.pngCompression || 6);
-    this.updateQualityDisplay('gif', size.gifColors || 256);
-
-    // Show/hide format-specific settings
-    this.toggleFormatSettings(size.format);
-
-    // Show/hide shape-specific settings
-    this.toggleShapeSettings(size.shape);
-  }
-
-  resetModalFields() {
-    document.getElementById('sizeNameInput').value = '';
-    document.getElementById('widthInput').value = '600';
-    document.getElementById('heightInput').value = '600';
-    document.getElementById('cropModeSelect').value = 'fit';
-    document.getElementById('qualitySelect').value = '3';
-    document.getElementById('formatSelect').value = 'png';
-    document.getElementById('shapeSelect').value = 'rectangle';
-    document.getElementById('backgroundColorInput').value = '#ffffff';
-    document.getElementById('filenamePatternInput').value =
-      '{original_name}_{width}x{height}.{format_ext}';
-
-    // Reset format-specific settings
-    document.getElementById('jpegQualityInput').value = 85;
-    document.getElementById('webpQualityInput').value = 80;
-    document.getElementById('pngCompressionInput').value = 6;
-    document.getElementById('gifColorsInput').value = 256;
-
-    // Reset shape-specific settings
-    document.getElementById('transparentBackgroundToggle').checked = false;
-
-    // Update display values
-    this.updateQualityDisplay('jpeg', 85);
-    this.updateQualityDisplay('webp', 80);
-    this.updateQualityDisplay('png', 6);
-    this.updateQualityDisplay('gif', 256);
-
-    // Show PNG settings by default
-    this.toggleFormatSettings('png');
-
-    // Show rectangle settings by default
-    this.toggleShapeSettings('rectangle');
-  }
-
-  closeSizeModal() {
-    document.getElementById('editSizeModal').style.display = 'none';
-    this.currentEditIndex = -1;
-  }
-
-  toggleFormatSettings(format) {
-    // Hide all format-specific settings
-    const jpegSettings = document.querySelector('.jpeg-setting');
-    const webpSettings = document.querySelector('.webp-setting');
-    const pngSettings = document.querySelector('.png-setting');
-    const gifSettings = document.querySelector('.gif-setting');
-    const icoSettings = document.querySelector('.ico-setting');
-
-    jpegSettings.style.display = 'none';
-    webpSettings.style.display = 'none';
-    pngSettings.style.display = 'none';
-    gifSettings.style.display = 'none';
-    icoSettings.style.display = 'none';
-
-    // Show the relevant setting based on format
-    switch (format) {
-      case 'jpeg':
-        jpegSettings.style.display = 'block';
-        break;
-      case 'webp':
-        webpSettings.style.display = 'block';
-        break;
-      case 'png':
-        pngSettings.style.display = 'block';
-        break;
-      case 'gif':
-        gifSettings.style.display = 'block';
-        break;
-      case 'ico':
-        icoSettings.style.display = 'block';
-        break;
-    }
-  }
-
-  updateQualityDisplay(format, value) {
-    const displayElement = document.getElementById(`${format}QualityValue`);
-    if (displayElement) {
-      if (format === 'png') {
-        displayElement.textContent = value; // PNG compression is 0-9
-      } else if (format === 'gif') {
-        displayElement.textContent = value; // GIF colors is 2-256
-      } else {
-        displayElement.textContent = value + '%'; // JPEG/WebP quality is percentage
-      }
-    }
-  }
-
-  toggleShapeSettings(shape) {
-    const transparencySettings = document.querySelector(
-      '.shape-transparency-setting'
-    );
-
-    // Show transparency option only for circle and rounded shapes
-    if (shape === 'circle' || shape === 'rounded') {
-      transparencySettings.style.display = 'block';
-    } else {
-      transparencySettings.style.display = 'none';
-    }
-  }
-
-  saveSizeConfig() {
-    const name = document.getElementById('sizeNameInput').value.trim();
-    const width = parseInt(document.getElementById('widthInput').value);
-    const height = parseInt(document.getElementById('heightInput').value);
-
-    if (!name) {
-      alert('Please enter a name for this size');
-      return;
-    }
-
-    if (!width || width < 1 || width > 10000) {
-      alert('Please enter a valid width (1-10000)');
-      return;
-    }
-
-    if (!height || height < 1 || height > 10000) {
-      alert('Please enter a valid height (1-10000)');
-      return;
-    }
-
-    const sizeConfig = {
-      name,
-      width,
-      height,
-      cropMode: document.getElementById('cropModeSelect').value,
-      quality: parseInt(document.getElementById('qualitySelect').value),
-      format: document.getElementById('formatSelect').value,
-      shape: document.getElementById('shapeSelect').value,
-      backgroundColor: document.getElementById('backgroundColorInput').value,
-      filenamePattern:
-        document.getElementById('filenamePatternInput').value.trim() ||
-        '{original_name}_{width}x{height}.{format_ext}',
-      jpegQuality: parseInt(document.getElementById('jpegQualityInput').value),
-      webpQuality: parseInt(document.getElementById('webpQualityInput').value),
-      pngCompression: parseInt(
-        document.getElementById('pngCompressionInput').value
-      ),
-      gifColors: parseInt(document.getElementById('gifColorsInput').value),
-      transparentBackground: document.getElementById(
-        'transparentBackgroundToggle'
-      ).checked,
-    };
-
-    if (this.currentEditIndex >= 0) {
-      this.sizes[this.currentEditIndex] = sizeConfig;
-    } else {
-      this.sizes.push(sizeConfig);
-    }
-
-    this.saveSizesToStorage();
-    this.renderSizes();
-    this.closeSizeModal();
-  }
-
-  editSize(index) {
-    this.openSizeModal(index);
-  }
-
-  duplicateSize(index) {
-    const size = { ...this.sizes[index] };
-    size.name = `${size.name} Copy`;
-    this.sizes.push(size);
-    this.saveSizesToStorage();
-    this.renderSizes();
-  }
-
-  deleteSize(index) {
-    if (confirm(`Delete "${this.sizes[index].name}" size?`)) {
-      this.sizes.splice(index, 1);
-      this.saveSizesToStorage();
-      this.renderSizes();
-    }
-  }
-
-  // Drag and drop handlers
-  handleSizeDragStart(event) {
-    this.draggedIndex = parseInt(event.target.dataset.index);
-    event.target.classList.add('dragging');
-    document.getElementById('sizesList').classList.add('drag-active');
-
-    // Set drag effect
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/html', event.target.outerHTML);
-  }
-
-  handleSizeDragOver(event) {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-
-    const draggedElement = document.querySelector('.dragging');
-    const targetElement = event.target.closest('.size-item');
-
-    if (targetElement && targetElement !== draggedElement) {
-      // Remove drag-over class from all items
-      document.querySelectorAll('.size-item').forEach((item) => {
-        item.classList.remove('drag-over');
-      });
-
-      // Add drag-over class to current target
-      targetElement.classList.add('drag-over');
-    }
-  }
-
-  handleSizeDrop(event) {
-    event.preventDefault();
-
-    const targetElement = event.target.closest('.size-item');
-    if (targetElement && this.draggedIndex !== undefined) {
-      const targetIndex = parseInt(targetElement.dataset.index);
-
-      if (this.draggedIndex !== targetIndex) {
-        this.reorderSizes(this.draggedIndex, targetIndex);
-      }
-    }
-
-    this.cleanupDrag();
-  }
-
-  handleSizeDragEnd(event) {
-    this.cleanupDrag();
-  }
-
-  cleanupDrag() {
-    // Remove drag-related classes
-    document.querySelectorAll('.size-item').forEach((item) => {
-      item.classList.remove('dragging', 'drag-over');
-    });
-    document.getElementById('sizesList').classList.remove('drag-active');
-
-    // Reset drag state
-    this.draggedIndex = undefined;
-  }
-
-  reorderSizes(fromIndex, toIndex) {
-    // Create a new array with reordered items
-    const newSizes = [...this.sizes];
-    const [movedItem] = newSizes.splice(fromIndex, 1);
-    newSizes.splice(toIndex, 0, movedItem);
-
-    // Update the sizes array
-    this.sizes = newSizes;
-
-    // Save and re-render
-    this.saveSizesToStorage();
-    this.renderSizes();
-  }
-
-  // Config import/export
   exportConfig() {
-    try {
-      const config = {
-        version: '1.0',
-        sizes: this.sizes,
-        exportDate: new Date().toISOString(),
-      };
-
-      const blob = new Blob([JSON.stringify(config, null, 2)], {
-        type: 'application/json',
-      });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'avatar-resizer-config.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error exporting config:', error);
-      alert('Failed to export configuration');
-    }
-  }
-
-  async importConfig(event) {
-    try {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const text = await file.text();
-      const config = JSON.parse(text);
-
-      if (!config.sizes || !Array.isArray(config.sizes)) {
-        throw new Error('Invalid configuration format');
-      }
-
-      // Validate size configurations
-      for (const size of config.sizes) {
-        if (!size.name || !size.width || !size.height) {
-          throw new Error('Invalid size configuration');
-        }
-      }
-
-      if (
-        confirm('Import configuration? This will replace your current sizes.')
-      ) {
-        this.sizes = config.sizes;
-        this.saveSizesToStorage();
-        this.renderSizes();
-      }
-    } catch (error) {
-      console.error('Error importing config:', error);
-      alert('Failed to import configuration. Please check the file format.');
-    } finally {
-      event.target.value = '';
-    }
-  }
-
-  // Image processing methods
-  async processImages() {
-    if (!this.originalImage || this.sizes.length === 0) return;
-
-    const processBtn = document.getElementById('processBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-
-    processBtn.disabled = true;
-    processBtn.innerHTML = '<span class="process-icon">⏳</span> Processing...';
-
-    try {
-      this.processedImages = [];
-
-      for (let i = 0; i < this.sizes.length; i++) {
-        const size = this.sizes[i];
-        const processedImage = await this.resizeImage(this.originalImage, size);
-        this.processedImages.push(processedImage);
-
-        // Update progress
-        processBtn.innerHTML = `<span class="process-icon">⏳</span> Processing... ${
-          i + 1
-        }/${this.sizes.length}`;
-      }
-
-      this.showProcessedImages();
-      this.showSuccessMessage();
-      downloadBtn.disabled = false;
-    } catch (error) {
-      console.error('Error processing images:', error);
-      alert('Failed to process images. Please try again.');
-    } finally {
-      processBtn.disabled = false;
-      processBtn.innerHTML =
-        '<span class="process-icon">🔄</span> Process Images';
-    }
-  }
-
-  async resizeImage(sourceCanvas, sizeConfig) {
-    try {
-      // Calculate dimensions based on crop mode
-      const {
-        targetWidth,
-        targetHeight,
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
-      } = this.calculateCropDimensions(sourceCanvas, sizeConfig);
-
-      // Create temporary canvas for cropping
-      const tempCanvas = document.createElement('canvas');
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCanvas.width = sourceWidth;
-      tempCanvas.height = sourceHeight;
-
-      // Draw cropped source
-      tempCtx.drawImage(
-        sourceCanvas,
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
-        0,
-        0,
-        sourceWidth,
-        sourceHeight
-      );
-
-      // Create destination canvas
-      const destCanvas = document.createElement('canvas');
-      destCanvas.width = targetWidth;
-      destCanvas.height = targetHeight;
-
-      // Resize using Pica
-      const resizedCanvas = await this.pica.resize(tempCanvas, destCanvas, {
-        quality: sizeConfig.quality,
-        alpha:
-          sizeConfig.format === 'png' ||
-          (sizeConfig.transparentBackground &&
-            (sizeConfig.shape === 'circle' || sizeConfig.shape === 'rounded')),
-      });
-
-      // Apply shape modifications
-      const finalCanvas = this.applyShape(resizedCanvas, sizeConfig);
-
-      // Convert to blob with format-specific quality settings
-      const mimeType = this.getMimeType(sizeConfig.format);
-      let quality;
-
-      switch (sizeConfig.format) {
-        case 'jpeg':
-          quality = (sizeConfig.jpegQuality || 85) / 100; // Convert percentage to 0-1
-          break;
-        case 'webp':
-          quality = (sizeConfig.webpQuality || 80) / 100; // Convert percentage to 0-1
-          break;
-        case 'png':
-          // PNG compression is handled differently, but we can still pass a quality value
-          // Note: PNG compression level is not directly supported by canvas.toBlob
-          // but we'll store it for potential future use with other libraries
-          quality = undefined; // PNG is lossless
-          break;
-        case 'gif':
-          // GIF quality is handled by canvas.toBlob, but colors are not directly controllable
-          // We store gifColors for potential future enhancement with specialized libraries
-          quality = undefined; // GIF compression is handled internally
-          break;
-        case 'ico':
-          // ICO format uses PNG encoding internally
-          quality = undefined; // ICO is typically lossless
-          break;
-        default:
-          quality = undefined;
-      }
-
-      const blob = await this.canvasToBlob(finalCanvas, mimeType, quality);
-
-      // Generate filename using pattern
-      const filename = this.generateFilename(
-        sizeConfig,
-        this.originalFile,
-        this.originalImage
-      );
-
-      return {
-        name: filename,
-        displayName: sizeConfig.name,
-        width: targetWidth,
-        height: targetHeight,
-        format: sizeConfig.format,
-        blob,
-        canvas: finalCanvas,
-        size: blob.size,
-      };
-    } catch (error) {
-      console.error('Error resizing image:', error);
-      throw error;
-    }
-  }
-
-  calculateCropDimensions(sourceCanvas, sizeConfig) {
-    const sourceWidth = sourceCanvas.width;
-    const sourceHeight = sourceCanvas.height;
-    const targetWidth = sizeConfig.width;
-    const targetHeight = sizeConfig.height;
-    const targetRatio = targetWidth / targetHeight;
-    const sourceRatio = sourceWidth / sourceHeight;
-
-    let cropX = 0,
-      cropY = 0,
-      cropWidth = sourceWidth,
-      cropHeight = sourceHeight;
-
-    switch (sizeConfig.cropMode) {
-      case 'fill':
-        // Crop to fill exact dimensions
-        if (sourceRatio > targetRatio) {
-          // Source is wider, crop width
-          cropWidth = sourceHeight * targetRatio;
-          cropX = (sourceWidth - cropWidth) / 2;
-        } else {
-          // Source is taller, crop height
-          cropHeight = sourceWidth / targetRatio;
-          cropY = (sourceHeight - cropHeight) / 2;
-        }
-        break;
-
-      case 'stretch':
-        // Use full source, will be stretched
-        break;
-
-      case 'fit':
-      default:
-        // Maintain aspect ratio, may have padding
-        // This will be handled by the resize operation
-        break;
-    }
-
-    return {
-      targetWidth,
-      targetHeight,
-      sourceX: Math.round(cropX),
-      sourceY: Math.round(cropY),
-      sourceWidth: Math.round(cropWidth),
-      sourceHeight: Math.round(cropHeight),
+    const config = {
+      version: '1.0',
+      timestamp: Date.now(),
+      sizes: this.sizes
     };
-  }
-
-  applyShape(canvas, sizeConfig) {
-    if (sizeConfig.shape === 'rectangle') return canvas;
-
-    const finalCanvas = document.createElement('canvas');
-    const ctx = finalCanvas.getContext('2d');
-    finalCanvas.width = canvas.width;
-    finalCanvas.height = canvas.height;
-
-    // Only fill background if not using transparent background
-    if (!sizeConfig.transparentBackground) {
-      ctx.fillStyle = sizeConfig.backgroundColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    // Create clipping path
-    ctx.save();
-
-    if (sizeConfig.shape === 'circle') {
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const radius = Math.min(canvas.width, canvas.height) / 2;
-
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-      ctx.clip();
-    } else if (sizeConfig.shape === 'rounded') {
-      const radius = Math.min(canvas.width, canvas.height) * 0.1; // 10% radius
-      this.roundRect(ctx, 0, 0, canvas.width, canvas.height, radius);
-      ctx.clip();
-    }
-
-    // Draw the image
-    ctx.drawImage(canvas, 0, 0);
-    ctx.restore();
-
-    return finalCanvas;
-  }
-
-  roundRect(ctx, x, y, width, height, radius) {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-    ctx.lineTo(x + radius, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
-  }
-
-  getMimeType(format) {
-    const mimeTypes = {
-      png: 'image/png',
-      jpeg: 'image/jpeg',
-      webp: 'image/webp',
-      gif: 'image/gif',
-      ico: 'image/x-icon',
-    };
-    return mimeTypes[format] || 'image/png';
-  }
-
-  generateFilename(sizeConfig, originalFile, originalImage) {
-    if (!sizeConfig.filenamePattern) {
-      return `${sizeConfig.name}_${sizeConfig.width}x${sizeConfig.height}.${sizeConfig.format}`;
-    }
-
-    const now = new Date();
-    const originalNameWithoutExt = originalFile.name.substring(
-      0,
-      originalFile.name.lastIndexOf('.')
-    );
-    const originalExt = originalFile.name.substring(
-      originalFile.name.lastIndexOf('.') + 1
-    );
-
-    // Get format extension
-    const formatExtensions = {
-      png: 'png',
-      jpeg: 'jpg',
-      webp: 'webp',
-      gif: 'gif',
-      ico: 'ico',
-    };
-    const formatExt = formatExtensions[sizeConfig.format] || sizeConfig.format;
-
-    const variables = {
-      // Original file info
-      original_name: originalNameWithoutExt,
-      original_ext: originalExt,
-      original_width: originalImage.naturalWidth,
-      original_height: originalImage.naturalHeight,
-
-      // Size config info
-      name: sizeConfig.name,
-      width: sizeConfig.width,
-      height: sizeConfig.height,
-      format_ext: formatExt,
-      crop_mode: sizeConfig.cropMode,
-      shape: sizeConfig.shape,
-      quality_text: this.getQualityText(sizeConfig.quality)
-        .toLowerCase()
-        .replace(' ', '_'),
-
-      // Date/time info
-      date: now.toISOString().split('T')[0], // YYYY-MM-DD
-      time: now.toTimeString().split(' ')[0].replace(/:/g, '-'), // HH-MM-SS
-      timestamp: now.getTime(),
-
-      // Additional useful variables
-      year: now.getFullYear(),
-      month: String(now.getMonth() + 1).padStart(2, '0'),
-      day: String(now.getDate()).padStart(2, '0'),
-      hour: String(now.getHours()).padStart(2, '0'),
-      minute: String(now.getMinutes()).padStart(2, '0'),
-      second: String(now.getSeconds()).padStart(2, '0'),
-    };
-
-    let filename = sizeConfig.filenamePattern;
-
-    // Replace all variables in the pattern
-    Object.keys(variables).forEach((key) => {
-      const regex = new RegExp(`\\{${key}\\}`, 'g');
-      filename = filename.replace(regex, variables[key]);
-    });
-
-    // Clean filename - remove invalid characters
-    filename = filename.replace(/[<>:"/\\|?*]/g, '_');
-
-    return filename;
-  }
-
-  canvasToBlob(canvas, mimeType, quality) {
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            // Fallback to PNG if the format is not supported
-            console.warn(
-              `Format ${mimeType} not supported, falling back to PNG`
-            );
-            canvas.toBlob(resolve, 'image/png');
-          }
-        },
-        mimeType,
-        quality
-      );
-    });
-  }
-
-  showProcessedImages() {
-    const section = document.getElementById('processedImagesSection');
-    const grid = document.getElementById('processedImagesGrid');
-    const info = document.getElementById('processedInfo');
-
-    section.style.display = 'block';
-    info.textContent = `${this.processedImages.length} images processed successfully`;
-    grid.innerHTML = '';
-
-    this.processedImages.forEach((image, index) => {
-      const item = this.createProcessedImageItem(image, index);
-      grid.appendChild(item);
-    });
-
-    // Update PhotoSwipe
-    this.updatePhotoSwipe();
-  }
-
-  createProcessedImageItem(image, index) {
-    const item = document.createElement('div');
-    item.className = 'processed-image-item';
-
-    const imgUrl = URL.createObjectURL(image.blob);
-    const displayName = image.displayName || image.name;
-
-    item.innerHTML = `
-            <a href="${imgUrl}" class="processed-image-link" data-pswp-width="${
-      image.width
-    }" data-pswp-height="${image.height}">
-                <img src="${imgUrl}" alt="${displayName}" class="processed-image">
-            </a>
-            <div class="processed-image-info">
-                <div class="processed-image-name">${displayName}</div>
-                <div class="processed-image-details">${image.width}×${
-      image.height
-    }px<br>${this.formatFileSize(image.size)}</div>
-            </div>
-            <button type="button" class="processed-image-download">
-                <span class="download-icon">⬇️</span> Download
-            </button>
-        `;
-
-    // Add download functionality
-    item
-      .querySelector('.processed-image-download')
-      .addEventListener('click', () => {
-        this.downloadSingleImage(image);
-      });
-
-    return item;
-  }
-
-  showSuccessMessage() {
-    const message = document.getElementById('successMessage');
-    const count = document.getElementById('processedCount');
-
-    count.textContent = this.processedImages.length;
-    message.style.display = 'block';
-
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-      message.style.display = 'none';
-    }, 5000);
-  }
-
-  // Download functionality
-  downloadSingleImage(image) {
-    const url = URL.createObjectURL(image.blob);
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = image.name;
+    a.download = `avatar-resizer-config-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    this.app.showMessage('Configuration exported successfully');
+  }
+
+  importConfig(files) {
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const config = JSON.parse(e.target.result);
+        if (!config.sizes || !Array.isArray(config.sizes)) {
+          throw new Error('Invalid configuration format');
+        }
+
+        if (confirm('This will replace all current size configurations. Continue?')) {
+          this.sizes = config.sizes.map(settings => new SizeConfiguration(settings));
+          this.saveSizes();
+          this.render();
+          this.app.showMessage('Configuration imported successfully');
+        }
+      } catch (err) {
+        this.app.showMessage('Invalid configuration file', 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  render() {
+    const container = $('sizesList');
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    // Sync compact view CSS class
+    if (this.isCompactView) {
+      container.classList.add('compact');
+    } else {
+      container.classList.remove('compact');
+    }
+
+    this.sizes.forEach(size => {
+      const item = this.createSizeItem(size);
+      container.appendChild(item);
+    });
+
+    // Always try to update status, but let updateStatus handle the guard
+    this.app.updateStatus();
+  }
+
+  createSizeItem(size) {
+    const template = $('sizeItemTemplate');
+    const item = template.content.cloneNode(true).firstElementChild;
+
+    item.dataset.id = size.id;
+    item.draggable = true;
+
+    const nameEl = item.querySelector('.size-name');
+    const dimensionsEl = item.querySelector('.size-dimensions');
+    const tagsEl = item.querySelector('.size-tags');
+
+    nameEl.textContent = size.name;
+    dimensionsEl.textContent = `${size.width}×${size.height}`;
+
+    if (this.isCompactView) {
+      tagsEl.style.display = 'none';
+    } else {
+      while (tagsEl.firstChild) {
+        tagsEl.removeChild(tagsEl.firstChild);
+      }
+      const tags = this.createTags(size);
+      tags.forEach(tag => tagsEl.appendChild(tag));
+    }
+
+    this.setupItemEventListeners(item, size);
+    this.setupDragListeners(item, size);
+    return item;
+  }
+
+  createTags(size) {
+    const format = OUTPUT_FORMATS[size.format];
+    const cropMode = CROP_MODES[size.cropMode];
+    const quality = size.getQualityText();
+    const centering = size.getCenteringPreset();
+    const shape = size.shape === 'rectangle' ? 'Rectangle' : size.shape === 'circle' ? 'Circle' : 'Rounded';
+
+    const bgColor = size.transparentBackground && size.supportsTransparency() ? 'transparent' : size.backgroundColor;
+    const displayBgColor = bgColor === 'transparent' ? DEFAULT_SETTINGS.backgroundColor : bgColor;
+    const textColor = bgColor === 'transparent' ? getContrastColor(DEFAULT_SETTINGS.backgroundColor) : getContrastColor(bgColor);
+    const bgStyle = bgColor === 'transparent'
+      ? `background-color: ${DEFAULT_SETTINGS.backgroundColor}`
+      : `background-color: ${bgColor}`;
+
+    const tagTemplate = $('sizeTagTemplate');
+    const tags = [];
+
+    const createTag = (text, style = '') => {
+      const tag = tagTemplate.content.cloneNode(true).firstElementChild;
+      tag.textContent = text;
+      if (style) tag.style.cssText = style;
+      return tag;
+    };
+
+    tags.push(createTag(format.name));
+    tags.push(createTag(cropMode));
+    tags.push(createTag(shape));
+    tags.push(createTag(quality));
+    tags.push(createTag(centering));
+    tags.push(createTag(bgColor === 'transparent' ? 'Transparent' : displayBgColor, `${bgStyle}; color: ${textColor};`));
+
+    return tags;
+  }
+
+  setupItemEventListeners(item, size) {
+    item.querySelector('.edit-btn').addEventListener('click', () => this.editSize(size.id));
+    item.querySelector('.duplicate-btn').addEventListener('click', () => this.duplicateSize(size.id));
+    item.querySelector('.delete-btn').addEventListener('click', () => {
+      if (confirm(`Delete "${size.name}" configuration?`)) {
+        this.deleteSize(size.id);
+      }
+    });
+  }
+
+  setupDragListeners(item, size) {
+    item.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', size.id);
+      item.classList.add('dragging');
+      $('sizesList').classList.add('drag-active');
+    });
+
+    item.addEventListener('dragend', e => {
+      item.classList.remove('dragging');
+      $('sizesList').classList.remove('drag-active');
+      // Remove drag-over from all items
+      document.querySelectorAll('.size-item').forEach(el => el.classList.remove('drag-over'));
+    });
+
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      item.classList.add('drag-over');
+    });
+
+    item.addEventListener('dragleave', e => {
+      item.classList.remove('drag-over');
+    });
+
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      item.classList.remove('drag-over');
+      const draggedId = e.dataTransfer.getData('text/plain');
+      const targetId = size.id;
+
+      if (draggedId !== targetId) {
+        this.reorderSizes(draggedId, targetId);
+      }
+    });
+  }
+
+  reorderSizes(draggedId, targetId) {
+    const draggedIndex = this.sizes.findIndex(s => s.id === draggedId);
+    const targetIndex = this.sizes.findIndex(s => s.id === targetId);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const draggedSize = this.sizes.splice(draggedIndex, 1)[0];
+    this.sizes.splice(targetIndex, 0, draggedSize);
+
+    this.saveSizes();
+    this.render();
+  }
+}
+
+class SizeEditor {
+  constructor(app) {
+    this.app = app;
+    this.currentSize = null;
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    $('modalCloseBtn').addEventListener('click', () => this.close());
+    $('modalCancelBtn').addEventListener('click', () => this.close());
+    $('modalSaveBtn').addEventListener('click', () => this.save());
+
+    $('formatSelect').addEventListener('change', () => this.updateFormatSettings());
+    $('shapeSelect').addEventListener('change', () => this.updateShapeSettings());
+    $('centeringPresetSelect').addEventListener('change', () => this.updateCenteringSettings());
+
+    this.setupSliders();
+
+    $('editSizeModal').addEventListener('click', e => {
+      if (e.target === $('editSizeModal')) this.close();
+    });
+  }
+
+  setupSliders() {
+    const sliders = [
+      'jpegQualityInput',
+      'webpQualityInput',
+      'horizontalOffsetInput',
+      'verticalOffsetInput'
+    ];
+
+    sliders.forEach(id => {
+      const slider = $(id);
+      const value = $(id.replace('Input', 'Value'));
+      slider.addEventListener('input', () => {
+        const suffix = id.includes('Quality') ? '%' : id.includes('Offset') ? '%' : '';
+        value.textContent = slider.value + suffix;
+      });
+    });
+
+    $('pngCompressionInput').addEventListener('input', () => {
+      $('pngCompressionValue').textContent = $('pngCompressionInput').value;
+    });
+
+    $('gifColorsInput').addEventListener('input', () => {
+      $('gifColorsValue').textContent = $('gifColorsInput').value;
+    });
+  }
+
+  open(size) {
+    this.currentSize = size;
+    this.populateForm(size);
+    $('modalTitle').textContent = size ? 'Edit Size' : 'Add Size';
+    $('editSizeModal').style.display = 'flex';
+  }
+
+  close() {
+    $('editSizeModal').style.display = 'none';
+    this.currentSize = null;
+  }
+
+  populateForm(size) {
+    if (!size) size = new SizeConfiguration();
+
+    $('sizeNameInput').value = size.name;
+    $('widthInput').value = size.width;
+    $('heightInput').value = size.height;
+    $('cropModeSelect').value = size.cropMode;
+    $('qualitySelect').value = size.quality;
+    $('formatSelect').value = size.format;
+    $('jpegQualityInput').value = size.jpegQuality;
+    $('webpQualityInput').value = size.webpQuality;
+    $('pngCompressionInput').value = size.pngCompressionLevel;
+    $('gifColorsInput').value = size.gifColors;
+    $('shapeSelect').value = size.shape;
+    $('cornerRadiusInput').value = size.cornerRadius;
+    $('backgroundColorInput').value = size.backgroundColor;
+    $('transparentBackgroundToggle').checked = size.transparentBackground;
+    $('filenamePatternInput').value = size.filenamePattern;
+    $('horizontalOffsetInput').value = size.horizontalOffset;
+    $('verticalOffsetInput').value = size.verticalOffset;
+
+    const centeringPreset = size.getCenteringPreset();
+    $('centeringPresetSelect').value = centeringPreset;
+
+    this.updateFormatSettings();
+    this.updateShapeSettings();
+    this.updateCenteringSettings();
+    this.updateSliderValues();
+  }
+
+  updateSliderValues() {
+    $('jpegQualityValue').textContent = $('jpegQualityInput').value + '%';
+    $('webpQualityValue').textContent = $('webpQualityInput').value + '%';
+    $('pngCompressionValue').textContent = $('pngCompressionInput').value;
+    $('gifColorsValue').textContent = $('gifColorsInput').value;
+    $('horizontalOffsetValue').textContent = $('horizontalOffsetInput').value + '%';
+    $('verticalOffsetValue').textContent = $('verticalOffsetInput').value + '%';
+  }
+
+  updateFormatSettings() {
+    const format = $('formatSelect').value;
+    const formatSettings = document.querySelectorAll('.format-setting');
+    formatSettings.forEach(setting => setting.style.display = 'none');
+
+    const transparencySetting = $$('.transparency-setting');
+    if (['png', 'webp', 'gif'].includes(format)) {
+      transparencySetting.style.display = 'block';
+    } else {
+      transparencySetting.style.display = 'none';
+    }
+
+    const formatSetting = $$(`.${format}-setting`);
+    if (formatSetting) {
+      formatSetting.style.display = 'block';
+    }
+  }
+
+  updateShapeSettings() {
+    const shape = $('shapeSelect').value;
+    const cornerRadiusGroup = $('cornerRadiusGroup');
+    cornerRadiusGroup.style.display = shape === 'rounded' ? 'block' : 'none';
+  }
+
+  updateCenteringSettings() {
+    const preset = $('centeringPresetSelect').value;
+    const customRow = $('customCenteringRow');
+
+    if (preset === 'custom') {
+      customRow.style.display = 'flex';
+    } else {
+      customRow.style.display = 'none';
+      const offsets = CENTERING_PRESETS[preset];
+      if (offsets) {
+        $('horizontalOffsetInput').value = offsets.h;
+        $('verticalOffsetInput').value = offsets.v;
+        $('horizontalOffsetValue').textContent = offsets.h + '%';
+        $('verticalOffsetValue').textContent = offsets.v + '%';
+      }
+    }
+  }
+
+  save() {
+    const settings = {
+      id: this.currentSize?.id ?? generateId(),
+      name: $('sizeNameInput').value || 'Resize',
+      width: parseInt($('widthInput').value) || 400,
+      height: parseInt($('heightInput').value) || 400,
+      cropMode: $('cropModeSelect').value,
+      horizontalOffset: parseInt($('horizontalOffsetInput').value),
+      verticalOffset: parseInt($('verticalOffsetInput').value),
+      quality: parseInt($('qualitySelect').value),
+      format: $('formatSelect').value,
+      jpegQuality: parseInt($('jpegQualityInput').value),
+      webpQuality: parseInt($('webpQualityInput').value),
+      gifColors: parseInt($('gifColorsInput').value),
+      pngCompressionLevel: parseInt($('pngCompressionInput').value),
+      shape: $('shapeSelect').value,
+      cornerRadius: parseInt($('cornerRadiusInput').value),
+      backgroundColor: $('backgroundColorInput').value,
+      transparentBackground: $('transparentBackgroundToggle').checked,
+      filenamePattern: $('filenamePatternInput').value || '{original_name}_{width}x{height}.{format_ext}'
+    };
+
+    const size = new SizeConfiguration(settings);
+
+    if (this.currentSize) {
+      this.app.sizeManager.updateSize(size);
+    } else {
+      this.app.sizeManager.addSize(settings);
+    }
+
+    this.close();
+  }
+}
+
+class ImageProcessor {
+  constructor(app) {
+    this.app = app;
+    this.processedImages = [];
+    this.isProcessing = false;
+  }
+
+  async processImages(originalImage, originalFile, sizes) {
+    if (this.isProcessing) return;
+    this.isProcessing = true;
+    this.processedImages = [];
+
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = originalImage.width;
+      canvas.height = originalImage.height;
+      ctx.drawImage(originalImage, 0, 0);
+
+      const results = [];
+      for (const size of sizes) {
+        try {
+          const result = await this.processImage(canvas, originalFile, size);
+          results.push(result);
+          this.processedImages.push(result);
+        } catch (err) {
+          console.error(`Failed to process ${size.name}:`, err);
+        }
+      }
+
+      this.app.showProcessedImages(results);
+      this.app.showMessage(`Successfully processed ${results.length} images`);
+      return results;
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  async processImage(sourceCanvas, originalFile, size) {
+    const outputCanvas = await this.createOutputCanvas(sourceCanvas, size);
+    const blob = await this.canvasToBlob(outputCanvas, size);
+    const filename = this.generateFilename(originalFile, size);
+
+    return {
+      size,
+      canvas: outputCanvas,
+      blob,
+      filename,
+      url: URL.createObjectURL(blob)
+    };
+  }
+
+  async createOutputCanvas(sourceCanvas, size) {
+    const outputCanvas = document.createElement('canvas');
+    const ctx = outputCanvas.getContext('2d');
+
+    outputCanvas.width = size.width;
+    outputCanvas.height = size.height;
+
+    if (!size.transparentBackground || !size.supportsTransparency()) {
+      ctx.fillStyle = size.backgroundColor;
+      ctx.fillRect(0, 0, size.width, size.height);
+    }
+
+    const sourceAspect = sourceCanvas.width / sourceCanvas.height;
+    const targetAspect = size.width / size.height;
+
+    let sourceX = 0, sourceY = 0, sourceWidth = sourceCanvas.width, sourceHeight = sourceCanvas.height;
+    let targetX = 0, targetY = 0, targetWidth = size.width, targetHeight = size.height;
+
+    // First, prepare the source region based on crop mode
+    if (size.cropMode === 'fill') {
+      // Crop source to match target aspect ratio
+      if (sourceAspect > targetAspect) {
+        // Source is wider, crop horizontally
+        sourceWidth = sourceCanvas.height * targetAspect;
+        sourceX = (sourceCanvas.width - sourceWidth) * (size.horizontalOffset / 100);
+      } else {
+        // Source is taller, crop vertically
+        sourceHeight = sourceCanvas.width / targetAspect;
+        sourceY = (sourceCanvas.height - sourceHeight) * (size.verticalOffset / 100);
+      }
+    } else if (size.cropMode === 'fit') {
+      // Calculate target dimensions to maintain aspect ratio
+      if (sourceAspect > targetAspect) {
+        // Source is wider
+        targetHeight = size.width / sourceAspect;
+        targetY = (size.height - targetHeight) * (size.verticalOffset / 100);
+      } else {
+        // Source is taller
+        targetWidth = size.height * sourceAspect;
+        targetX = (size.width - targetWidth) * (size.horizontalOffset / 100);
+      }
+    }
+
+    // Create a source canvas with the cropped region
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = sourceWidth;
+    croppedCanvas.height = sourceHeight;
+    const croppedCtx = croppedCanvas.getContext('2d');
+    croppedCtx.drawImage(sourceCanvas, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
+
+    // Create target canvas for resizing
+    const resizedCanvas = document.createElement('canvas');
+    resizedCanvas.width = targetWidth;
+    resizedCanvas.height = targetHeight;
+
+    // Use pica to resize
+    await picaInstance.resize(croppedCanvas, resizedCanvas, {
+      quality: size.quality,
+      unsharpAmount: 0
+    });
+
+    // Draw the resized image onto the output canvas
+    ctx.drawImage(resizedCanvas, targetX, targetY);
+
+    if (size.shape === 'circle') {
+      this.applyCircleMask(ctx, size);
+    } else if (size.shape === 'rounded') {
+      this.applyRoundedMask(ctx, size);
+    }
+
+    return outputCanvas;
+  }
+
+  applyCircleMask(ctx, size) {
+    const radius = Math.min(size.width, size.height) / 2;
+    const centerX = size.width / 2;
+    const centerY = size.height / 2;
+
+    const imageData = ctx.getImageData(0, 0, size.width, size.height);
+    const data = imageData.data;
+
+    for (let y = 0; y < size.height; y++) {
+      for (let x = 0; x < size.width; x++) {
+        const dx = x - centerX;
+        const dy = y - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance > radius) {
+          const index = (y * size.width + x) * 4;
+          if (size.transparentBackground && size.supportsTransparency()) {
+            data[index + 3] = 0;
+          } else {
+            const rgb = hexToRgb(size.backgroundColor);
+            data[index] = rgb.r;
+            data[index + 1] = rgb.g;
+            data[index + 2] = rgb.b;
+          }
+        }
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  applyRoundedMask(ctx, size) {
+    const radius = Math.min(size.cornerRadius, size.width / 2, size.height / 2);
+
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, size.width, size.height, radius);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  async canvasToBlob(canvas, size) {
+    const format = OUTPUT_FORMATS[size.format];
+
+    if (size.format === 'ico') {
+      return this.canvasToIco(canvas);
+    }
+
+    let quality;
+    if (size.format === 'jpeg') {
+      quality = size.jpegQuality / 100;
+    } else if (size.format === 'webp') {
+      quality = size.webpQuality / 100;
+    }
+
+    return picaInstance.toBlob(canvas, format.mime, quality);
+  }
+
+  async canvasToIco(canvas) {
+    const size = Math.min(canvas.width, canvas.height);
+    const icoCanvas = document.createElement('canvas');
+    icoCanvas.width = size;
+    icoCanvas.height = size;
+
+    const ctx = icoCanvas.getContext('2d');
+    ctx.drawImage(canvas, 0, 0, size, size);
+
+    return picaInstance.toBlob(icoCanvas, 'image/png');
+  }
+
+  generateFilename(originalFile, size) {
+    const now = new Date();
+    const originalName = originalFile.name.replace(/\.[^/.]+$/, '');
+    const originalExt = originalFile.name.split('.').pop().toLowerCase();
+
+    const context = {
+      originalName,
+      originalExt,
+      originalWidth: this.app.originalImage.width,
+      originalHeight: this.app.originalImage.height,
+      name: size.name,
+      width: size.width,
+      height: size.height,
+      format: OUTPUT_FORMATS[size.format].name,
+      formatExt: OUTPUT_FORMATS[size.format].ext,
+      cropMode: CROP_MODES[size.cropMode],
+      shape: size.shape === 'rectangle' ? 'Rectangle' : size.shape === 'circle' ? 'Circle' : 'Rounded',
+      qualityText: size.getQualityText(),
+      date: now.toISOString().split('T')[0],
+      time: now.toTimeString().split(' ')[0].replace(/:/g, ''),
+      timestamp: Math.floor(now.getTime() / 1000),
+      dateObj: now  // Add date object for advanced formatting
+    };
+
+    return formatFilename(size.filenamePattern, context);
+  }
+}
+
+class Gallery {
+  constructor(app) {
+    this.app = app;
+    this.lightbox = null;
+    this.setupLightbox();
+  }
+
+  setupLightbox() {
+    this.lightbox = new PhotoSwipeLightbox({
+      gallery: '#processedImagesGrid',
+      children: '.processed-image-link',
+      pswpModule: PhotoSwipe
+    });
+
+    this.lightbox.on('uiRegister', () => {
+      this.lightbox.pswp.ui.registerElement({
+        name: 'download-button',
+        order: 8,
+        isButton: true,
+        html: '📥',
+        title: 'Download',
+        onClick: (event, el, pswp) => {
+          const currSlide = pswp.currSlide;
+          const index = currSlide.index;
+          const processedImage = this.app.processor.processedImages[index];
+          if (processedImage) {
+            this.downloadImage(processedImage);
+          }
+        }
+      });
+    });
+
+    this.lightbox.init();
+  }
+
+  show(processedImages) {
+    const container = $('processedImagesGrid');
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    processedImages.forEach((result, index) => {
+      const template = $('processedImageTemplate');
+      const item = template.content.cloneNode(true).firstElementChild;
+
+      item.dataset.index = index;
+
+      const link = item.querySelector('.processed-image-link');
+      const img = item.querySelector('.processed-image');
+
+      // Set up the link and image for PhotoSwipe
+      link.href = result.url;
+      link.dataset.pswpWidth = result.size.width;
+      link.dataset.pswpHeight = result.size.height;
+
+      img.src = result.url;
+      img.alt = result.filename;
+
+      const nameEl = item.querySelector('.processed-image-name');
+      const detailsEl = item.querySelector('.processed-image-details');
+
+      nameEl.textContent = result.filename;
+      detailsEl.textContent = `${result.size.width}×${result.size.height} • ${OUTPUT_FORMATS[result.size.format].name}`;
+
+      const downloadBtn = item.querySelector('.processed-image-download');
+      downloadBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.downloadImage(result);
+      });
+
+      container.appendChild(item);
+    });
+
+    $('processedImagesSection').style.display = 'block';
+    $('processedInfo').textContent = `${processedImages.length} processed images`;
+  }
+
+  downloadImage(result) {
+    const a = document.createElement('a');
+    a.href = result.url;
+    a.download = result.filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+}
+
+class DownloadManager {
+  constructor(app) {
+    this.app = app;
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    $('downloadBtn').addEventListener('click', () => this.downloadAll());
   }
 
   async downloadAll() {
-    if (this.processedImages.length === 0) return;
+    const processedImages = this.app.processor.processedImages;
+    if (processedImages.length === 0) return;
 
-    const downloadBtn = document.getElementById('downloadBtn');
-    downloadBtn.disabled = true;
-    downloadBtn.innerHTML =
-      '<span class="download-icon">⏳</span> Creating ZIP...';
+    if (processedImages.length === 1) {
+      this.app.gallery.downloadImage(processedImages[0]);
+      return;
+    }
 
     try {
-      // Debug library availability
-      console.log('JSZip available:', typeof JSZip !== 'undefined');
-      console.log('Processed images count:', this.processedImages.length);
-
-      if (typeof JSZip === 'undefined') {
-        alert('JSZip library not loaded. Please refresh the page.');
-        return;
-      }
-
       const zip = new JSZip();
 
-      // Add each processed image to the zip
-      this.processedImages.forEach((image) => {
-        zip.file(image.name, image.blob);
-      });
+      for (const result of processedImages) {
+        zip.file(result.filename, result.blob);
+      }
 
-      // Generate zip file
-      const zipBlob = await zip.generateAsync({
-        type: 'blob',
-        compression: 'DEFLATE',
-        compressionOptions: { level: 6 },
-      });
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
 
-      // Download zip file
-      const url = URL.createObjectURL(zipBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'avatar-resizer-images.zip';
+      a.download = `avatar-resizer-${Date.now()}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+
       URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error creating ZIP:', error);
-      alert('Failed to create ZIP file. Please try again.');
-    } finally {
-      downloadBtn.disabled = false;
-      downloadBtn.innerHTML =
-        '<span class="download-icon">📦</span> Download All';
-    }
-  }
-
-  // PhotoSwipe integration
-  initializePhotoSwipe() {
-    // Using UMD build for compatibility
-    if (typeof PhotoSwipeLightbox !== 'undefined') {
-      this.lightbox = new PhotoSwipeLightbox({
-        gallery: '#processedImagesGrid',
-        children: '.processed-image-link',
-        pswpModule: PhotoSwipe,
-        showHideAnimationType: 'zoom',
-        bgOpacity: 0.9,
-        spacing: 0.1,
-        allowPanToNext: true,
-        zoom: true,
-        close: true,
-        arrowKeys: true,
-        returnFocus: false,
-      });
-
-      this.lightbox.init();
-    }
-  }
-
-  updatePhotoSwipe() {
-    if (this.lightbox) {
-      this.lightbox.destroy();
-      this.initializePhotoSwipe();
+      this.app.showMessage('ZIP file downloaded successfully');
+    } catch (err) {
+      this.app.showMessage('Failed to create ZIP file', 'error');
     }
   }
 }
 
-// Initialize the application when DOM is loaded
+class AvatarResizerApp {
+  constructor() {
+    this.originalImage = null;
+    this.originalFile = null;
+    this.autoProcess = true;
+
+    this.uploader = new ImageUploader(this);
+    this.sizeManager = new SizeManager(this);
+    this.sizeEditor = new SizeEditor(this);
+    this.processor = new ImageProcessor(this);
+    this.gallery = new Gallery(this);
+    this.downloadManager = new DownloadManager(this);
+
+    this.setupEventListeners();
+    this.loadSettings();
+    // Move updateStatus after all components are initialized
+    this.updateStatus();
+  }
+
+  setupEventListeners() {
+    $('processBtn').addEventListener('click', () => this.processImages());
+    $('autoProcessToggle').addEventListener('change', (e) => {
+      this.autoProcess = e.target.checked;
+      this.saveSettings();
+    });
+  }
+
+  loadSettings() {
+    try {
+      const saved = localStorage.getItem('avatarResizer_settings');
+      if (saved) {
+        const settings = JSON.parse(saved);
+        this.autoProcess = settings.autoProcess ?? true;
+        $('autoProcessToggle').checked = this.autoProcess;
+      }
+    } catch (e) {
+      this.autoProcess = true;
+    }
+  }
+
+  saveSettings() {
+    const settings = { autoProcess: this.autoProcess };
+    localStorage.setItem('avatarResizer_settings', JSON.stringify(settings));
+  }
+
+  setOriginalImage(img, file) {
+    this.originalImage = img;
+    this.originalFile = file;
+
+    $('originalImage').src = img.src;
+
+    const infoContainer = $('originalImageInfo');
+    while (infoContainer.firstChild) {
+      infoContainer.removeChild(infoContainer.firstChild);
+    }
+
+    const template = $('originalImageInfoTemplate');
+    const infoElement = template.content.cloneNode(true);
+
+    const dimensionsEl = infoElement.querySelector('.image-dimensions');
+    const sizeEl = infoElement.querySelector('.image-size');
+    const formatEl = infoElement.querySelector('.image-format');
+
+    dimensionsEl.textContent = `${img.width} × ${img.height} pixels`;
+    sizeEl.textContent = formatBytes(file.size);
+    formatEl.textContent = file.type.split('/')[1].toUpperCase();
+
+    infoContainer.appendChild(infoElement);
+
+    $('uploadArea').style.display = 'none';
+    $('originalImageSection').style.display = 'block';
+
+    if (this.autoProcess && this.sizeManager.sizes.length > 0) {
+      this.processImages();
+    } else {
+      this.updateStatus();
+    }
+  }
+
+  async processImages() {
+    if (!this.originalImage || this.sizeManager.sizes.length === 0) return;
+
+    $('processBtn').disabled = true;
+
+    const processBtn = $('processBtn');
+    while (processBtn.firstChild) {
+      processBtn.removeChild(processBtn.firstChild);
+    }
+
+    const template = $('processButtonStateTemplate');
+    const buttonContent = template.content.cloneNode(true);
+    const iconEl = buttonContent.querySelector('.process-icon');
+    const textEl = buttonContent.querySelector('.process-text');
+
+    iconEl.textContent = '⏳';
+    textEl.textContent = ' Processing...';
+
+    processBtn.appendChild(buttonContent);
+
+    try {
+      await this.processor.processImages(this.originalImage, this.originalFile, this.sizeManager.sizes);
+    } finally {
+      $('processBtn').disabled = false;
+
+      const processBtn = $('processBtn');
+      while (processBtn.firstChild) {
+        processBtn.removeChild(processBtn.firstChild);
+      }
+
+      const template = $('processButtonStateTemplate');
+      const buttonContent = template.content.cloneNode(true);
+      const iconEl = buttonContent.querySelector('.process-icon');
+      const textEl = buttonContent.querySelector('.process-text');
+
+      iconEl.textContent = '🔄';
+      textEl.textContent = ' Process Images';
+
+      processBtn.appendChild(buttonContent);
+
+      this.updateStatus();
+    }
+  }
+
+  showProcessedImages(results) {
+    this.gallery.show(results);
+    $('successMessage').style.display = 'block';
+    $('processedCount').textContent = results.length;
+
+    setTimeout(() => {
+      $('successMessage').style.display = 'none';
+    }, 3000);
+  }
+
+  updateStatus() {
+    // Guard against calling before initialization is complete
+    if (!this.sizeManager || !this.processor) {
+      return;
+    }
+
+    const hasImage = !!this.originalImage;
+    const hasSizes = this.sizeManager.sizes.length > 0;
+    const hasProcessed = this.processor.processedImages.length > 0;
+    const processedCount = this.processor.processedImages.length;
+
+    $('processBtn').disabled = !hasImage || !hasSizes;
+    $('downloadBtn').disabled = !hasProcessed;
+
+    let message;
+    if (!hasImage) {
+      message = 'Select an image to get started';
+    } else if (!hasSizes) {
+      message = 'Add size configurations to process';
+    } else if (!hasProcessed) {
+      message = `Ready to process ${this.sizeManager.sizes.length} sizes`;
+    } else {
+      message = `${processedCount} images processed`;
+    }
+
+    $('actionInfo').textContent = message;
+  }
+
+  showMessage(text, type = 'success') {
+    const existingMessage = $$('.app-message');
+    if (existingMessage) {
+      existingMessage.remove();
+    }
+
+    const template = $('messageTemplate');
+    const message = template.content.cloneNode(true).firstElementChild;
+    message.className = `app-message ${type}`;
+    message.textContent = text;
+
+    document.body.appendChild(message);
+
+    setTimeout(() => {
+      message.classList.add('show');
+    }, 10);
+
+    setTimeout(() => {
+      message.classList.remove('show');
+      setTimeout(() => {
+        if (message.parentNode) {
+          message.parentNode.removeChild(message);
+        }
+      }, 300);
+    }, 3000);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  new AvatarResizer();
+  new AvatarResizerApp();
 });

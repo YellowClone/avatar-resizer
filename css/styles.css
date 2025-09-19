@@ -13,6 +13,10 @@ body {
   line-height: 1.5;
 }
 
+.app-container {
+  padding-bottom: 3em;
+}
+
 /* Header */
 .header {
   text-align: center;
@@ -540,7 +544,6 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1.5rem;
-  margin-bottom: 3rem;
 }
 
 .processed-image-item {
@@ -584,6 +587,15 @@ body {
   font-weight: 600;
   color: #333;
   margin-bottom: 0.25rem;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+  max-height: 2.6em; /* 2 lines * 1.3 line-height */
+  word-break: break-all;
 }
 
 .processed-image-details {
@@ -971,6 +983,15 @@ body {
   width: 16px;
   height: 16px;
   display: inline-block;
+}
+
+/* Centering and shape-specific settings */
+#customCenteringRow {
+  margin-top: 0.5rem;
+}
+
+#cornerRadiusGroup {
+  margin-top: 0.5rem;
 }
 
 /* Global drag and drop styles */

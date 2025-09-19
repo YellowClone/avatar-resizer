@@ -13,9 +13,7 @@
       <!-- Header -->
       <header class="header">
         <div class="logo">🌸 Avatar Resizer</div>
-        <p class="subtitle">
-          Resize your avatar to multiple sizes for different platforms
-        </p>
+        <p class="subtitle">Resize your avatar to multiple sizes for different platforms</p>
       </header>
 
       <!-- Main Content -->
@@ -29,54 +27,27 @@
               <div class="upload-text">Drop your image here</div>
               <div class="upload-subtext">
                 or
-                <button type="button" class="browse-btn" id="browseBtn">
-                  browse files
-                </button>
+                <button type="button" class="browse-btn" id="browseBtn">browse files</button>
               </div>
-              <div class="supported-formats">
-                Supports: JPG, PNG, GIF, WEBP, BMP
-              </div>
+              <div class="supported-formats">Supports: JPG, PNG, GIF, WEBP, BMP</div>
             </div>
-            <input
-              type="file"
-              id="fileInput"
-              accept="image/*"
-              style="display: none"
-            />
+            <input type="file" id="fileInput" accept="image/*" style="display: none" />
           </div>
 
           <!-- Original Image Preview -->
-          <div
-            class="original-image-section"
-            id="originalImageSection"
-            style="display: none"
-          >
+          <div class="original-image-section" id="originalImageSection" style="display: none">
             <div class="section-header">
               <h3>Original Image</h3>
-              <button
-                type="button"
-                class="change-image-btn"
-                id="changeImageBtn"
-              >
-                Change Image
-              </button>
+              <button type="button" class="change-image-btn" id="changeImageBtn">Change Image</button>
             </div>
             <div class="image-preview-container">
-              <img
-                id="originalImage"
-                class="original-image"
-                alt="Original image"
-              />
+              <img id="originalImage" class="original-image" alt="Original image" />
               <div class="image-info" id="originalImageInfo"></div>
             </div>
           </div>
 
           <!-- Success Message -->
-          <div
-            class="success-message"
-            id="successMessage"
-            style="display: none"
-          >
+          <div class="success-message" id="successMessage" style="display: none">
             <span class="success-icon">✅</span>
             Successfully processed
             <span id="processedCount">0</span> images
@@ -90,26 +61,10 @@
             <div class="section-header">
               <h3>Output Sizes</h3>
               <div class="config-buttons">
-                <button
-                  type="button"
-                  class="config-btn"
-                  id="compactViewToggle"
-                  title="Toggle compact view"
-                >
-                  📋
-                </button>
-                <button type="button" class="config-btn" id="exportConfigBtn">
-                  Export
-                </button>
-                <button type="button" class="config-btn" id="importConfigBtn">
-                  Import
-                </button>
-                <input
-                  type="file"
-                  id="configFileInput"
-                  accept=".json"
-                  style="display: none"
-                />
+                <button type="button" class="config-btn" id="compactViewToggle" title="Toggle compact view">☰</button>
+                <button type="button" class="config-btn" id="exportConfigBtn">Export</button>
+                <button type="button" class="config-btn" id="importConfigBtn">Import</button>
+                <input type="file" id="configFileInput" accept=".json" style="display: none" />
               </div>
             </div>
 
@@ -119,9 +74,7 @@
             </div>
 
             <!-- Add Size Button -->
-            <button type="button" class="add-size-btn" id="addSizeBtn">
-              <span class="add-icon">+</span> Add Size
-            </button>
+            <button type="button" class="add-size-btn" id="addSizeBtn"><span class="add-icon">+</span> Add Size</button>
           </div>
 
           <!-- Actions Section -->
@@ -131,11 +84,7 @@
               <label class="toggle-label" for="autoProcessToggle">
                 <span class="toggle-text">Auto-process images</span>
                 <div class="toggle-switch">
-                  <input
-                    type="checkbox"
-                    id="autoProcessToggle"
-                    class="toggle-input"
-                  />
+                  <input type="checkbox" id="autoProcessToggle" class="toggle-input" checked />
                   <span class="toggle-slider"></span>
                 </div>
               </label>
@@ -143,17 +92,10 @@
             <button type="button" class="process-btn" id="processBtn" disabled>
               <span class="process-icon">🔄</span> Process Images
             </button>
-            <button
-              type="button"
-              class="download-btn"
-              id="downloadBtn"
-              disabled
-            >
+            <button type="button" class="download-btn" id="downloadBtn" disabled>
               <span class="download-icon">📦</span> Download All
             </button>
-            <div class="action-info" id="actionInfo">
-              Upload an image to get started
-            </div>
+            <div class="action-info" id="actionInfo">Select an image to get started</div>
             <div class="repo-link">
               <a
                 href="https://github.com/YellowClone/avatar-resizer"
@@ -162,7 +104,10 @@
                 aria-label="View Avatar Resizer on GitHub"
               >
                 <svg class="repo-link-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                  <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+                  <path
+                    fill="currentColor"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+                  />
                 </svg>
                 <span>View on GitHub</span>
               </a>
@@ -172,11 +117,7 @@
       </div>
 
       <!-- Processed Images Section -->
-      <div
-        class="processed-images-section"
-        id="processedImagesSection"
-        style="display: none"
-      >
+      <div class="processed-images-section" id="processedImagesSection" style="display: none">
         <div class="section-header">
           <h3>Processed Images</h3>
           <div class="processed-info" id="processedInfo"></div>
@@ -191,9 +132,7 @@
         <div class="modal">
           <div class="modal-header">
             <h3 id="modalTitle">Edit Size</h3>
-            <button type="button" class="modal-close" id="modalCloseBtn">
-              ×
-            </button>
+            <button type="button" class="modal-close" id="modalCloseBtn">×</button>
           </div>
           <div class="modal-body">
             <div class="form-section">
@@ -201,34 +140,17 @@
 
               <div class="form-group">
                 <label for="sizeNameInput">Name</label>
-                <input
-                  type="text"
-                  id="sizeNameInput"
-                  class="form-input"
-                  placeholder="Size name"
-                />
+                <input type="text" id="sizeNameInput" class="form-input" placeholder="Size name" />
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label for="widthInput">Width (px)</label>
-                  <input
-                    type="number"
-                    id="widthInput"
-                    class="form-input"
-                    min="1"
-                    placeholder="600"
-                  />
+                  <input type="number" id="widthInput" class="form-input" min="1" placeholder="600" />
                 </div>
                 <div class="form-group">
                   <label for="heightInput">Height (px)</label>
-                  <input
-                    type="number"
-                    id="heightInput"
-                    class="form-input"
-                    min="1"
-                    placeholder="600"
-                  />
+                  <input type="number" id="heightInput" class="form-input" min="1" placeholder="600" />
                 </div>
               </div>
             </div>
@@ -246,6 +168,57 @@
               </div>
 
               <div class="form-group">
+                <label for="centeringPresetSelect">Centering</label>
+                <select id="centeringPresetSelect" class="form-select">
+                  <option value="center">Center (Default)</option>
+                  <option value="top-left">Top-Left</option>
+                  <option value="top-center">Top-Center</option>
+                  <option value="top-right">Top-Right</option>
+                  <option value="center-left">Center-Left</option>
+                  <option value="center-right">Center-Right</option>
+                  <option value="bottom-left">Bottom-Left</option>
+                  <option value="bottom-center">Bottom-Center</option>
+                  <option value="bottom-right">Bottom-Right</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+
+              <div class="form-row" id="customCenteringRow" style="display: none">
+                <div class="form-group">
+                  <label for="horizontalOffsetInput">Horizontal Offset (%)</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="horizontalOffsetInput"
+                      class="quality-slider"
+                      min="0"
+                      max="100"
+                      value="50"
+                      step="1"
+                    />
+                    <span class="quality-value" id="horizontalOffsetValue">50%</span>
+                  </div>
+                  <div class="form-help">0 = left, 50 = center, 100 = right</div>
+                </div>
+                <div class="form-group">
+                  <label for="verticalOffsetInput">Vertical Offset (%)</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="verticalOffsetInput"
+                      class="quality-slider"
+                      min="0"
+                      max="100"
+                      value="50"
+                      step="1"
+                    />
+                    <span class="quality-value" id="verticalOffsetValue">50%</span>
+                  </div>
+                  <div class="form-help">0 = top, 50 = center, 100 = bottom</div>
+                </div>
+              </div>
+
+              <div class="form-group">
                 <label for="qualitySelect">Resize Algorithm</label>
                 <select id="qualitySelect" class="form-select">
                   <option value="3">High Quality (Bicubic - default)</option>
@@ -254,8 +227,7 @@
                   <option value="0">Fastest (Nearest)</option>
                 </select>
                 <div class="form-help">
-                  Controls how the image is scaled. High quality produces
-                  smoother results but is slower.
+                  Controls how the image is scaled. High quality produces smoother results but is slower.
                 </div>
               </div>
 
@@ -273,10 +245,7 @@
               <!-- Format-specific settings -->
               <div class="format-specific-settings">
                 <!-- JPEG Quality -->
-                <div
-                  class="form-group format-setting jpeg-setting"
-                  style="display: none"
-                >
+                <div class="form-group format-setting jpeg-setting" style="display: none">
                   <label for="jpegQualityInput">JPEG Quality</label>
                   <div class="quality-slider-container">
                     <input
@@ -290,16 +259,11 @@
                     />
                     <span class="quality-value" id="jpegQualityValue">85%</span>
                   </div>
-                  <div class="form-help">
-                    Higher values produce better quality but larger file sizes
-                  </div>
+                  <div class="form-help">Higher values produce better quality but larger file sizes</div>
                 </div>
 
                 <!-- WebP Quality -->
-                <div
-                  class="form-group format-setting webp-setting"
-                  style="display: none"
-                >
+                <div class="form-group format-setting webp-setting" style="display: none">
                   <label for="webpQualityInput">WebP Quality</label>
                   <div class="quality-slider-container">
                     <input
@@ -313,17 +277,11 @@
                     />
                     <span class="quality-value" id="webpQualityValue">80%</span>
                   </div>
-                  <div class="form-help">
-                    WebP typically produces smaller files than JPEG at similar
-                    quality
-                  </div>
+                  <div class="form-help">WebP typically produces smaller files than JPEG at similar quality</div>
                 </div>
 
                 <!-- PNG Compression -->
-                <div
-                  class="form-group format-setting png-setting"
-                  style="display: none"
-                >
+                <div class="form-group format-setting png-setting" style="display: none">
                   <label for="pngCompressionInput">PNG Compression Level</label>
                   <div class="quality-slider-container">
                     <input
@@ -335,21 +293,15 @@
                       value="6"
                       step="1"
                     />
-                    <span class="quality-value" id="pngCompressionValue"
-                      >6</span
-                    >
+                    <span class="quality-value" id="pngCompressionValue">6</span>
                   </div>
                   <div class="form-help">
-                    Higher values produce smaller files but take longer to
-                    process (0=fastest, 9=smallest)
+                    Higher values produce smaller files but take longer to process (0=fastest, 9=smallest)
                   </div>
                 </div>
 
                 <!-- GIF Color Reduction -->
-                <div
-                  class="form-group format-setting gif-setting"
-                  style="display: none"
-                >
+                <div class="form-group format-setting gif-setting" style="display: none">
                   <label for="gifColorsInput">Color Palette Size</label>
                   <div class="quality-slider-container">
                     <input
@@ -364,19 +316,15 @@
                     <span class="quality-value" id="gifColorsValue">256</span>
                   </div>
                   <div class="form-help">
-                    Number of colors in the GIF palette (2-256). Lower values
-                    reduce file size but may affect quality
+                    Number of colors in the GIF palette (2-256). Lower values reduce file size but may affect quality
                   </div>
                 </div>
 
                 <!-- ICO Note -->
-                <div
-                  class="form-group format-setting ico-setting"
-                  style="display: none"
-                >
+                <div class="form-group format-setting ico-setting" style="display: none">
                   <div class="form-help">
-                    ICO format is optimized for small icon sizes. Best results
-                    with sizes 16x16, 32x32, 48x48, or 64x64 pixels.
+                    ICO format is optimized for small icon sizes. Best results with sizes 16x16, 32x32, 48x48, or 64x64
+                    pixels.
                   </div>
                 </div>
               </div>
@@ -390,37 +338,32 @@
                 </select>
               </div>
 
+              <div class="form-group" id="cornerRadiusGroup" style="display: none">
+                <label for="cornerRadiusInput">Corner Radius (px)</label>
+                <input type="number" id="cornerRadiusInput" class="form-input" min="1" max="100" value="10" />
+                <div class="form-help">Radius for rounded rectangle corners</div>
+              </div>
+
               <div class="form-group">
                 <label for="backgroundColorInput">Background Color</label>
-                <input
-                  type="color"
-                  id="backgroundColorInput"
-                  class="form-color"
-                  value="#ffffff"
-                />
+                <input type="color" id="backgroundColorInput" class="form-color" value="#ffffff" />
                 <div class="form-help">
-                  Used as background color when transparency is disabled
+                  Used as background color for letterboxing in Fit mode, shaped outputs, and when transparency is
+                  disabled
                 </div>
               </div>
 
-              <div
-                class="form-group shape-transparency-setting"
-                style="display: none"
-              >
+              <div class="form-group transparency-setting" style="display: none">
                 <label class="transparency-toggle-label">
                   <span class="transparency-text">Transparent Background</span>
                   <div class="toggle-switch">
-                    <input
-                      type="checkbox"
-                      id="transparentBackgroundToggle"
-                      class="toggle-input"
-                    />
+                    <input type="checkbox" id="transparentBackgroundToggle" class="toggle-input" />
                     <span class="toggle-slider"></span>
                   </div>
                 </label>
                 <div class="form-help">
-                  Makes the background transparent instead of using the
-                  background color
+                  Makes the background transparent instead of using the background color. Useful for letterboxing in Fit
+                  mode and shaped outputs.
                 </div>
               </div>
 
@@ -433,27 +376,75 @@
                   placeholder="{original_name}_{width}x{height}.{format_ext}"
                 />
                 <div class="form-help">
-                  Available variables: {original_name}, {original_ext},
-                  {original_width}, {original_height}, {name}, {width},
-                  {height}, {format_ext}, {crop_mode}, {shape}, {quality_text},
-                  {date}, {time}, {timestamp}
+                  Available variables: {original_name}, {original_ext}, {original_width}, {original_height}, {name},
+                  {width}, {height}, {format_ext}, {crop_mode}, {shape}, {quality_text}, {date}, {time}, {timestamp}
                 </div>
               </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn-secondary" id="modalCancelBtn">
-              Cancel
-            </button>
-            <button type="button" class="btn-primary" id="modalSaveBtn">
-              Save Size
-            </button>
+            <button type="button" class="btn-secondary" id="modalCancelBtn">Cancel</button>
+            <button type="button" class="btn-primary" id="modalSaveBtn">Save Size</button>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Hidden Templates -->
+    <template id="sizeItemTemplate">
+      <div class="size-item">
+        <div class="size-header">
+          <div class="size-info">
+            <span class="size-name"></span>
+            <span class="size-dimensions"></span>
+          </div>
+          <div class="size-actions">
+            <button type="button" class="size-action-btn edit-btn" title="Edit">✏️</button>
+            <button type="button" class="size-action-btn duplicate-btn" title="Duplicate">📋</button>
+            <button type="button" class="size-action-btn delete-btn" title="Delete">🗑️</button>
+          </div>
+        </div>
+        <div class="size-tags"></div>
+      </div>
+    </template>
+
+    <template id="processedImageTemplate">
+      <div class="processed-image-item">
+        <a href="#" class="processed-image-link">
+          <img class="processed-image" src="" alt="" />
+        </a>
+        <div class="processed-image-info">
+          <div class="processed-image-name"></div>
+          <div class="processed-image-details"></div>
+        </div>
+        <button type="button" class="processed-image-download" title="Download">
+          <span>📥</span>
+          <span>Download</span>
+        </button>
+      </div>
+    </template>
+
+    <template id="sizeTagTemplate">
+      <span class="size-tag"></span>
+    </template>
+
+    <template id="originalImageInfoTemplate">
+      <div class="image-dimensions"></div>
+      <div class="image-size"></div>
+      <div class="image-format"></div>
+    </template>
+
+    <template id="processButtonStateTemplate">
+      <span class="process-icon"></span>
+      <span class="process-text"></span>
+    </template>
+
+    <template id="messageTemplate">
+      <div class="app-message"></div>
+    </template>
+
     <!-- Scripts -->
+    <script src="js/lib/dayjs/dayjs.min.js"></script>
     <script src="js/lib/pica/pica.min.js"></script>
     <script src="js/lib/jszip/jszip.min.js"></script>
     <script src="js/lib/photoswipe/photoswipe.umd.min.js"></script>
