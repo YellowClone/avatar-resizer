@@ -25,6 +25,7 @@ const DEFAULT_SETTINGS = {
   cornerRadius: 10,
   backgroundColor: '#ffffff',
   transparentBackground: false,
+  maintainAspectRatio: true,
   filenamePattern: '{original_name}_{width}x{height}.{format_ext}',
 };
 
@@ -147,6 +148,7 @@ function formatFilename(pattern, context) {
     date: context.date,
     time: context.time,
     timestamp: context.timestamp,
+    maintain_aspect_ratio: context.maintainAspectRatio ? 'Maintain' : 'Stretch',
   };
 
   // Enhanced regex to support quoted formats: {key:"format"} or {key:'format'} or {key:format}
@@ -353,6 +355,7 @@ class SizeConfiguration {
     this.cornerRadius = settings.cornerRadius ?? DEFAULT_SETTINGS.cornerRadius;
     this.backgroundColor = settings.backgroundColor ?? DEFAULT_SETTINGS.backgroundColor;
     this.transparentBackground = settings.transparentBackground ?? DEFAULT_SETTINGS.transparentBackground;
+    this.maintainAspectRatio = settings.maintainAspectRatio ?? DEFAULT_SETTINGS.maintainAspectRatio;
     this.filenamePattern = settings.filenamePattern ?? DEFAULT_SETTINGS.filenamePattern;
   }
 
@@ -651,6 +654,7 @@ class SizeManager {
       return tag;
     };
 
+    tags.push(createTag(size.maintainAspectRatio ? 'Maintain' : 'Stretch'));
     tags.push(createTag(cropMode));
     tags.push(createTag(centering));
     tags.push(createTag(resizeQuality));
@@ -748,6 +752,7 @@ class SizeEditor {
     $('shapeSelect').addEventListener('change', () => this.updateShapeSettings());
     $('centeringPresetSelect').addEventListener('change', () => this.updateCenteringSettings());
 
+
     this.setupSliders();
 
     $('editSizeModal').addEventListener('click', (e) => {
@@ -805,6 +810,7 @@ class SizeEditor {
     $('cornerRadiusInput').value = size.cornerRadius;
     $('backgroundColorInput').value = size.backgroundColor;
     $('transparentBackgroundToggle').checked = size.transparentBackground;
+    $('maintainAspectRatioToggle').checked = size.maintainAspectRatio;
     $('filenamePatternInput').value = size.filenamePattern;
     $('horizontalOffsetInput').value = size.horizontalOffset;
     $('verticalOffsetInput').value = size.verticalOffset;
@@ -888,6 +894,7 @@ class SizeEditor {
       cornerRadius: parseInt($('cornerRadiusInput').value),
       backgroundColor: $('backgroundColorInput').value,
       transparentBackground: $('transparentBackgroundToggle').checked,
+      maintainAspectRatio: $('maintainAspectRatioToggle').checked,
       filenamePattern: $('filenamePatternInput').value || '{original_name}_{width}x{height}.{format_ext}',
     };
 
@@ -944,7 +951,7 @@ class ImageProcessor {
   async processImage(sourceCanvas, originalFile, size) {
     const outputCanvas = await this.createOutputCanvas(sourceCanvas, size);
     const blob = await this.canvasToBlob(outputCanvas, size);
-    const filename = this.generateFilename(originalFile, size);
+    const filename = this.generateFilename(originalFile, size, outputCanvas.width, outputCanvas.height);
 
     return {
       size,
@@ -959,16 +966,36 @@ class ImageProcessor {
     const outputCanvas = document.createElement('canvas');
     const ctx = outputCanvas.getContext('2d');
 
-    outputCanvas.width = size.width;
-    outputCanvas.height = size.height;
+    // Calculate actual output dimensions
+    let outputWidth = size.width;
+    let outputHeight = size.height;
+
+    if (size.maintainAspectRatio) {
+      // Maintain aspect ratio of source image within the target bounds
+      const sourceAspect = sourceCanvas.width / sourceCanvas.height;
+      const targetAspect = size.width / size.height;
+
+      if (sourceAspect > targetAspect) {
+        // Source is wider than target bounds, fit by width
+        outputWidth = size.width;
+        outputHeight = size.width / sourceAspect;
+      } else {
+        // Source is taller than target bounds, fit by height
+        outputHeight = size.height;
+        outputWidth = size.height * sourceAspect;
+      }
+    }
+
+    outputCanvas.width = Math.round(outputWidth);
+    outputCanvas.height = Math.round(outputHeight);
 
     if (!size.transparentBackground || !size.supportsTransparency()) {
       ctx.fillStyle = size.backgroundColor;
-      ctx.fillRect(0, 0, size.width, size.height);
+      ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
     }
 
     const sourceAspect = sourceCanvas.width / sourceCanvas.height;
-    const targetAspect = size.width / size.height;
+    const targetAspect = outputCanvas.width / outputCanvas.height;
 
     let sourceX = 0,
       sourceY = 0,
@@ -976,8 +1003,8 @@ class ImageProcessor {
       sourceHeight = sourceCanvas.height;
     let targetX = 0,
       targetY = 0,
-      targetWidth = size.width,
-      targetHeight = size.height;
+      targetWidth = outputCanvas.width,
+      targetHeight = outputCanvas.height;
 
     // First, prepare the source region based on crop mode
     if (size.cropMode === 'fill') {
@@ -995,12 +1022,12 @@ class ImageProcessor {
       // Calculate target dimensions to maintain aspect ratio
       if (sourceAspect > targetAspect) {
         // Source is wider
-        targetHeight = size.width / sourceAspect;
-        targetY = (size.height - targetHeight) * (size.verticalOffset / 100);
+        targetHeight = outputCanvas.width / sourceAspect;
+        targetY = (outputCanvas.height - targetHeight) * (size.verticalOffset / 100);
       } else {
         // Source is taller
-        targetWidth = size.height * sourceAspect;
-        targetX = (size.width - targetWidth) * (size.horizontalOffset / 100);
+        targetWidth = outputCanvas.height * sourceAspect;
+        targetX = (outputCanvas.width - targetWidth) * (size.horizontalOffset / 100);
       }
     }
 
@@ -1104,10 +1131,14 @@ class ImageProcessor {
     return picaInstance.toBlob(icoCanvas, 'image/png');
   }
 
-  generateFilename(originalFile, size) {
+  generateFilename(originalFile, size, actualWidth, actualHeight) {
     const now = new Date();
     const originalName = originalFile.name.replace(/\.[^/.]+$/, '');
     const originalExt = originalFile.name.split('.').pop().toLowerCase();
+
+    // Use actual output dimensions if provided (for maintainAspectRatio), otherwise use configured dimensions
+    const width = actualWidth || size.width;
+    const height = actualHeight || size.height;
 
     const context = {
       originalName,
@@ -1115,8 +1146,8 @@ class ImageProcessor {
       originalWidth: this.app.originalImage.width,
       originalHeight: this.app.originalImage.height,
       name: size.name,
-      width: size.width,
-      height: size.height,
+      width: width,
+      height: height,
       cropMode: CROP_MODES[size.cropMode],
       resizeQuality: size.getResizeQualityText(),
       format: OUTPUT_FORMATS[size.format].name,
@@ -1128,6 +1159,7 @@ class ImageProcessor {
       date: now.toISOString().split('T')[0],
       time: now.toTimeString().split(' ')[0].replace(/:/g, ''),
       timestamp: Math.floor(now.getTime() / 1000),
+      maintainAspectRatio: size.maintainAspectRatio,
       dateObj: now,
     };
 
@@ -1187,8 +1219,8 @@ class Gallery {
 
       // Set up the link and image for PhotoSwipe
       link.href = result.url;
-      link.dataset.pswpWidth = result.size.width;
-      link.dataset.pswpHeight = result.size.height;
+      link.dataset.pswpWidth = result.canvas.width;
+      link.dataset.pswpHeight = result.canvas.height;
 
       img.src = result.url;
       img.alt = result.filename;
@@ -1199,7 +1231,7 @@ class Gallery {
       const formatEl = item.querySelector('.processed-image-format');
 
       nameEl.textContent = result.filename;
-      dimensionsEl.textContent = `${result.size.width} × ${result.size.height} pixels`;
+      dimensionsEl.textContent = `${result.canvas.width} × ${result.canvas.height} pixels`;
       sizeEl.textContent = formatBytes(result.blob.size);
       formatEl.textContent = OUTPUT_FORMATS[result.size.format].name.toUpperCase();
 
