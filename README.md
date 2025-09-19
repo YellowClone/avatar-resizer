@@ -26,8 +26,10 @@ All dependencies are included locally, it works offline without an internet conn
 
 ## Default presets
 
-- Small: 200×200 (square)
-- Medium: 600×600 (square)
+- Tiny: 100x100px
+- Small: 200x200px
+- Medium: 400x400px
+- Large: 800x800px
 
 ## Options
 
