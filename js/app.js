@@ -412,10 +412,14 @@ class SizeManager {
   toggleCompactView() {
     this.isCompactView = !this.isCompactView;
     const container = $('sizesList');
+    const button = $('compactViewToggle');
+
     if (this.isCompactView) {
       container.classList.add('compact');
+      button.classList.add('active');
     } else {
       container.classList.remove('compact');
+      button.classList.remove('active');
     }
     this.render();
   }
@@ -1262,12 +1266,6 @@ class AvatarResizerApp {
 
   showProcessedImages(results) {
     this.gallery.show(results);
-    $('successMessage').style.display = 'block';
-    $('processedCount').textContent = results.length;
-
-    setTimeout(() => {
-      $('successMessage').style.display = 'none';
-    }, 3000);
   }
 
   updateStatus() {

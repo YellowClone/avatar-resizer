@@ -169,6 +169,7 @@ body {
 
 /* Success Message */
 .success-message {
+  display: none;
   background: #d4edda;
   color: #155724;
   padding: 1rem;
@@ -190,6 +191,7 @@ body {
 .config-buttons {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
 }
 
 .config-btn {
@@ -207,6 +209,16 @@ body {
   background-color: #f8f9fa;
   border-color: #adb5bd;
   color: #495057;
+}
+
+.config-btn.active {
+  background-color: #6c5ce7;
+  border-color: transparent;
+  color: white;
+}
+
+.config-btn.active:hover {
+  border-color: #adb5bd;
 }
 
 /* Size List */
@@ -1032,4 +1044,42 @@ body.global-drag-over::after {
   backdrop-filter: blur(3px);
   z-index: 9999;
   pointer-events: none;
+}
+
+/* App Message Popup Styles */
+.app-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #28a745;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 10001;
+  transform: translateX(400px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  max-width: 350px;
+  word-wrap: break-word;
+}
+
+.app-message.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.app-message.error {
+  background: #dc3545;
+}
+
+.app-message.warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.app-message.info {
+  background: #17a2b8;
 }
