@@ -201,60 +201,9 @@
               </div>
 
               <div class="form-group">
-                <label for="centeringPresetSelect">Centering</label>
-                <select id="centeringPresetSelect" class="form-select">
-                  <option value="center">Center (Default)</option>
-                  <option value="top-left">Top-Left</option>
-                  <option value="top-center">Top-Center</option>
-                  <option value="top-right">Top-Right</option>
-                  <option value="center-left">Center-Left</option>
-                  <option value="center-right">Center-Right</option>
-                  <option value="bottom-left">Bottom-Left</option>
-                  <option value="bottom-center">Bottom-Center</option>
-                  <option value="bottom-right">Bottom-Right</option>
-                  <option value="custom">Custom</option>
-                </select>
-              </div>
-
-              <div class="form-row" id="customCenteringRow" style="display: none">
-                <div class="form-group">
-                  <label for="horizontalOffsetInput">Horizontal Offset (%)</label>
-                  <div class="quality-slider-container">
-                    <input
-                      type="range"
-                      id="horizontalOffsetInput"
-                      class="quality-slider"
-                      min="0"
-                      max="100"
-                      value="50"
-                      step="1"
-                    />
-                    <span class="quality-value" id="horizontalOffsetValue">50%</span>
-                  </div>
-                  <div class="form-help">0 = left, 50 = center, 100 = right</div>
-                </div>
-                <div class="form-group">
-                  <label for="verticalOffsetInput">Vertical Offset (%)</label>
-                  <div class="quality-slider-container">
-                    <input
-                      type="range"
-                      id="verticalOffsetInput"
-                      class="quality-slider"
-                      min="0"
-                      max="100"
-                      value="50"
-                      step="1"
-                    />
-                    <span class="quality-value" id="verticalOffsetValue">50%</span>
-                  </div>
-                  <div class="form-help">0 = top, 50 = center, 100 = bottom</div>
-                </div>
-              </div>
-
-              <div class="form-group">
                 <label for="qualitySelect">Resize Algorithm</label>
                 <select id="qualitySelect" class="form-select">
-                  <option value="3">High Quality (Bicubic - default)</option>
+                  <option value="3">High Quality (Bicubic)</option>
                   <option value="2">Medium Quality (Bilinear)</option>
                   <option value="1">Low Quality (Box)</option>
                   <option value="0">Fastest (Nearest)</option>
@@ -371,6 +320,57 @@
                 </select>
               </div>
 
+              <div class="form-group">
+                <label for="centeringPresetSelect">Centering</label>
+                <select id="centeringPresetSelect" class="form-select">
+                  <option value="center">Center</option>
+                  <option value="top-left">Top-Left</option>
+                  <option value="top-center">Top-Center</option>
+                  <option value="top-right">Top-Right</option>
+                  <option value="center-left">Center-Left</option>
+                  <option value="center-right">Center-Right</option>
+                  <option value="bottom-left">Bottom-Left</option>
+                  <option value="bottom-center">Bottom-Center</option>
+                  <option value="bottom-right">Bottom-Right</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+
+              <div class="form-row" id="customCenteringRow" style="display: none">
+                <div class="form-group">
+                  <label for="horizontalOffsetInput">Horizontal Offset (%)</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="horizontalOffsetInput"
+                      class="quality-slider"
+                      min="0"
+                      max="100"
+                      value="50"
+                      step="1"
+                    />
+                    <span class="quality-value" id="horizontalOffsetValue">50%</span>
+                  </div>
+                  <div class="form-help">0 = left, 50 = center, 100 = right</div>
+                </div>
+                <div class="form-group">
+                  <label for="verticalOffsetInput">Vertical Offset (%)</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="verticalOffsetInput"
+                      class="quality-slider"
+                      min="0"
+                      max="100"
+                      value="50"
+                      step="1"
+                    />
+                    <span class="quality-value" id="verticalOffsetValue">50%</span>
+                  </div>
+                  <div class="form-help">0 = top, 50 = center, 100 = bottom</div>
+                </div>
+              </div>
+
               <div class="form-group" id="cornerRadiusGroup" style="display: none">
                 <label for="cornerRadiusInput">Corner Radius (px)</label>
                 <input type="number" id="cornerRadiusInput" class="form-input" min="1" max="100" value="10" />
@@ -410,7 +410,12 @@
                 />
                 <div class="form-help">
                   Available variables: {original_name}, {original_ext}, {original_width}, {original_height}, {name},
-                  {width}, {height}, {format_ext}, {crop_mode}, {shape}, {quality_text}, {date}, {time}, {timestamp}
+                  {width}, {height}, {crop_mode}, {resize_quality}, {format}, {format_ext}, {quality_text},
+                  {shape}, {centering}, {background}, {date}, {time}, {timestamp}
+                </div>
+                <div class="form-help">
+                  Formatting options: {timestamp:"YYYY-MM-DD HH:mm:ss"}, {string:upper}, {string:lower}, {number:4} (e.g. 20
+                  -> 0020)
                 </div>
               </div>
             </div>

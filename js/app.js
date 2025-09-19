@@ -78,15 +78,15 @@ const CENTERING_PRESETS = {
 };
 
 const CENTERING_MAP = {
-  '0,0': 'top-left',
-  '50,0': 'top-center',
-  '100,0': 'top-right',
-  '0,50': 'center-left',
-  '50,50': 'center',
-  '100,50': 'center-right',
-  '0,100': 'bottom-left',
-  '50,100': 'bottom-center',
-  '100,100': 'bottom-right',
+  '0,0': 'Top-Left',
+  '50,0': 'Top-Center',
+  '100,0': 'Top-Right',
+  '0,50': 'Center-Left',
+  '50,50': 'Center',
+  '100,50': 'Center-Right',
+  '0,100': 'Bottom-Left',
+  '50,100': 'Bottom-Center',
+  '100,100': 'bottom-Right',
 };
 
 const CROP_MODES = {
@@ -136,11 +136,14 @@ function formatFilename(pattern, context) {
     name: context.name,
     width: context.width,
     height: context.height,
+    crop_mode: context.cropMode,
+    resize_quality: context.resizeQuality,
     format: context.format,
     format_ext: context.formatExt,
-    crop_mode: context.cropMode,
-    shape: context.shape,
     quality_text: context.qualityText,
+    shape: context.shape,
+    centering: context.centering,
+    background: context.background,
     date: context.date,
     time: context.time,
     timestamp: context.timestamp,
@@ -317,9 +320,21 @@ class SizeConfiguration {
     const qualityName = QUALITY_NAMES[this.quality];
     if (this.format === 'jpeg') return `${this.jpegQuality}%`;
     if (this.format === 'webp') return `${this.webpQuality}%`;
-    if (this.format === 'png') return `Level ${this.pngCompressionLevel}`;
+    if (this.format === 'png') return `C${this.pngCompressionLevel}`;
     if (this.format === 'gif') return `${this.gifColors} colors`;
     return qualityName;
+  }
+
+  getResizeQualityText() {
+    return QUALITY_NAMES[this.quality];
+  }
+
+  getFormatQualityText() {
+    if (this.format === 'jpeg') return `${this.jpegQuality}%`;
+    if (this.format === 'webp') return `${this.webpQuality}%`;
+    if (this.format === 'png') return `C${this.pngCompressionLevel}`;
+    if (this.format === 'gif') return `${this.gifColors} colors`;
+    return null;
   }
 
   supportsTransparency() {
@@ -553,7 +568,8 @@ class SizeManager {
   createTags(size) {
     const format = OUTPUT_FORMATS[size.format];
     const cropMode = CROP_MODES[size.cropMode];
-    const quality = size.getQualityText();
+    const resizeQuality = size.getResizeQualityText();
+    const formatQuality = size.getFormatQualityText();
     const centering = size.getCenteringPreset();
     const shape = size.shape === 'rectangle' ? 'Rectangle' : size.shape === 'circle' ? 'Circle' : 'Rounded';
 
@@ -576,11 +592,14 @@ class SizeManager {
       return tag;
     };
 
-    tags.push(createTag(format.name));
     tags.push(createTag(cropMode));
-    tags.push(createTag(shape));
-    tags.push(createTag(quality));
     tags.push(createTag(centering));
+    tags.push(createTag(resizeQuality));
+    tags.push(createTag(format.name));
+    if (formatQuality) {
+      tags.push(createTag(formatQuality));
+    }
+    tags.push(createTag(shape));
     tags.push(
       createTag(bgColor === 'transparent' ? 'Transparent' : displayBgColor, `${bgStyle}; color: ${textColor};`)
     );
@@ -731,7 +750,7 @@ class SizeEditor {
     $('horizontalOffsetInput').value = size.horizontalOffset;
     $('verticalOffsetInput').value = size.verticalOffset;
 
-    const centeringPreset = size.getCenteringPreset();
+    const centeringPreset = size.getCenteringPreset().toLowerCase();
     $('centeringPresetSelect').value = centeringPreset;
 
     this.updateFormatSettings();
@@ -1039,15 +1058,18 @@ class ImageProcessor {
       name: size.name,
       width: size.width,
       height: size.height,
+      cropMode: CROP_MODES[size.cropMode],
+      resizeQuality: size.getResizeQualityText(),
       format: OUTPUT_FORMATS[size.format].name,
       formatExt: OUTPUT_FORMATS[size.format].ext,
-      cropMode: CROP_MODES[size.cropMode],
-      shape: size.shape === 'rectangle' ? 'Rectangle' : size.shape === 'circle' ? 'Circle' : 'Rounded',
       qualityText: size.getQualityText(),
+      shape: size.shape === 'rectangle' ? 'Rectangle' : size.shape === 'circle' ? 'Circle' : 'Rounded',
+      centering: size.getCenteringPreset(),
+      background: size.transparentBackground ? 'Transparent' : size.backgroundColor.replace(/^#/, ''),
       date: now.toISOString().split('T')[0],
       time: now.toTimeString().split(' ')[0].replace(/:/g, ''),
       timestamp: Math.floor(now.getTime() / 1000),
-      dateObj: now, // Add date object for advanced formatting
+      dateObj: now,
     };
 
     return formatFilename(size.filenamePattern, context);

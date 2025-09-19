@@ -185,7 +185,7 @@ body {
 
 .config-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.3rem;
   align-items: center;
 }
 
@@ -278,7 +278,7 @@ body {
 
 .size-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
 .size-action-btn {
@@ -308,7 +308,7 @@ body {
 
 .size-tags {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.3rem;
   flex-wrap: wrap;
 }
 

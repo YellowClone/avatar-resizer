@@ -34,14 +34,13 @@ All dependencies are included locally, it works offline without an internet conn
 - Preset name
 - Target sizes: Width and height (px)
 - Crop modes: Fit (contain), Fill (cover/crop), Stretch (ignore aspect)
-- Fit mode centering: Top-Left, Top-Center, Top-Right, Center-Left, Center, Center-Right, Bottom-Left, Bottom-Center, Bottom-Right
 - Resize quality: High, Medium, Low, Fastest (Bicubic/Bilinear/Box/Nearest)
 - Output formats: PNG, JPEG, WebP
   - Set quality and compression settings
 - Shapes: Rectangle, Circle, Rounded rectangle
+- Centering: Top-Left, Top-Center, Top-Right, Center-Left, Center, Center-Right, Bottom-Left, Bottom-Center, Bottom-Right
 - Background color and optional transparency for shaped outputs
-- Filename pattern with placeholders: `{original_name}`, `{original_ext}`, `{original_width}`, `{original_height}`, `{name}`,
-  `{width}`, `{height}`, `{format_ext}`, `{crop_mode}`, `{shape}`, `{quality_text}`, `{date}`, `{time}`, `{timestamp}`
+- Filename pattern with placeholders: `{original_name}`, `{original_ext}`, `{original_width}`, `{original_height}`, `{name}`, `{width}`, `{height}`, `{crop_mode}`, `{resize_quality}`, `{format}`, `{format_ext}`, `{quality_text}`, `{shape}`, `{centering}`, `{background}`, `{date}`, `{time}`, `{timestamp}`
   - Upper/lower case formatting for text placeholders (e.g. `{name:upper}`, `{format_ext:lower}`)
   - Formatting for timestamps and dates in filename placeholders (e.g. `{timestamp:"YYYY-MM-DD HH:mm:ss"}`, ``{date:YYYY-MM-DD}`, `{time:HH-mm-ss}`)
   - Zero-padding for number placeholders (e.g. `{width:4}` for 4-digit width)
