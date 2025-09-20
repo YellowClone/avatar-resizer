@@ -771,13 +771,13 @@ class SizeEditor {
       });
     });
 
-    $('pngCompressionInput').addEventListener('input', () => {
+    /*$('pngCompressionInput').addEventListener('input', () => {
       $('pngCompressionValue').textContent = $('pngCompressionInput').value;
     });
 
     $('gifColorsInput').addEventListener('input', () => {
       $('gifColorsValue').textContent = $('gifColorsInput').value;
-    });
+    });*/
   }
 
   open(size) {
@@ -803,8 +803,8 @@ class SizeEditor {
     $('formatSelect').value = size.format;
     $('jpegQualityInput').value = size.jpegQuality;
     $('webpQualityInput').value = size.webpQuality;
-    $('pngCompressionInput').value = size.pngCompressionLevel;
-    $('gifColorsInput').value = size.gifColors;
+    //$('pngCompressionInput').value = size.pngCompressionLevel;
+    //$('gifColorsInput').value = size.gifColors;
     $('shapeSelect').value = size.shape;
     $('cornerRadiusInput').value = size.cornerRadius;
     $('backgroundColorInput').value = size.backgroundColor;
@@ -826,8 +826,8 @@ class SizeEditor {
   updateSliderValues() {
     $('jpegQualityValue').textContent = $('jpegQualityInput').value + '%';
     $('webpQualityValue').textContent = $('webpQualityInput').value + '%';
-    $('pngCompressionValue').textContent = $('pngCompressionInput').value;
-    $('gifColorsValue').textContent = $('gifColorsInput').value;
+    //$('pngCompressionValue').textContent = $('pngCompressionInput').value;
+    //$('gifColorsValue').textContent = $('gifColorsInput').value;
     $('horizontalOffsetValue').textContent = $('horizontalOffsetInput').value + '%';
     $('verticalOffsetValue').textContent = $('verticalOffsetInput').value + '%';
   }
@@ -838,7 +838,7 @@ class SizeEditor {
     formatSettings.forEach((setting) => (setting.style.display = 'none'));
 
     const transparencySetting = $$('.transparency-setting');
-    if (['png', 'webp', 'gif', 'ico'].includes(format)) {
+    if (['png', 'webp', 'ico'].includes(format)) {
       transparencySetting.style.display = 'block';
     } else {
       transparencySetting.style.display = 'none';
@@ -887,8 +887,8 @@ class SizeEditor {
       format: $('formatSelect').value,
       jpegQuality: parseInt($('jpegQualityInput').value),
       webpQuality: parseInt($('webpQualityInput').value),
-      gifColors: parseInt($('gifColorsInput').value),
-      pngCompressionLevel: parseInt($('pngCompressionInput').value),
+      //gifColors: parseInt($('gifColorsInput').value),
+      //pngCompressionLevel: parseInt($('pngCompressionInput').value),
       shape: $('shapeSelect').value,
       cornerRadius: parseInt($('cornerRadiusInput').value),
       backgroundColor: $('backgroundColorInput').value,
