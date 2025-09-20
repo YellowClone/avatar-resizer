@@ -970,7 +970,7 @@ class ImageProcessor {
     let outputWidth = size.width;
     let outputHeight = size.height;
 
-    if (size.maintainAspectRatio) {
+    if (size.maintainAspectRatio && size.format !== 'ico') {
       // Maintain aspect ratio of source image within the target bounds
       const sourceAspect = sourceCanvas.width / sourceCanvas.height;
       const targetAspect = size.width / size.height;
