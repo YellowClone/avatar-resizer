@@ -1329,16 +1329,12 @@ class DownloadManager {
 
   setupEventListeners() {
     $('downloadBtn').addEventListener('click', () => this.downloadAll());
+    $('downloadIcoBtn').addEventListener('click', () => this.downloadIco());
   }
 
   async downloadAll() {
     const processedImages = this.app.processor.processedImages;
     if (processedImages.length === 0) return;
-
-    if (processedImages.length === 1) {
-      this.app.gallery.downloadImage(processedImages[0]);
-      return;
-    }
 
     try {
       const zip = new JSZip();
@@ -1361,6 +1357,81 @@ class DownloadManager {
       this.app.showMessage('ZIP file downloaded successfully');
     } catch (err) {
       this.app.showMessage('Failed to create ZIP file', 'error');
+    }
+  }
+
+  // Download all images as a multi-resolution ICO file
+  async downloadIco() {
+    const processedImages = this.app.processor.processedImages;
+    if (!processedImages || processedImages.length === 0) return;
+
+    try {
+      // First, collect PNG ArrayBuffers for each image
+      const pngBuffers = [];
+
+      for (const result of processedImages) {
+        const canvas = result.canvas;
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        const buf = await blob.arrayBuffer();
+        pngBuffers.push({ buf: new Uint8Array(buf), width: canvas.width, height: canvas.height });
+      }
+
+      // Calculate sizes
+      const count = pngBuffers.length;
+      const headerSize = 6;
+      const dirEntrySize = 16;
+      let offset = headerSize + dirEntrySize * count;
+
+      // Calculate total size
+      let totalSize = offset;
+      for (const p of pngBuffers) totalSize += p.buf.byteLength;
+
+      const outBuf = new ArrayBuffer(totalSize);
+      const view = new DataView(outBuf);
+      const out8 = new Uint8Array(outBuf);
+      let ptr = 0;
+
+      view.setUint16(ptr, 0, true); ptr += 2; // Reserved
+      view.setUint16(ptr, 1, true); ptr += 2; // Type 1 = icon
+      view.setUint16(ptr, count, true); ptr += 2; // Count
+
+      // Directory entries
+      for (let i = 0; i < count; i++) {
+        const p = pngBuffers[i]; // Width (1 byte) - 0 means 256
+
+        out8[ptr++] = p.width >= 256 ? 0 : p.width; // Height (1 byte)
+        out8[ptr++] = p.height >= 256 ? 0 : p.height; // Color count
+        out8[ptr++] = 0; // Reserved
+        out8[ptr++] = 0; // Planes (2 bytes)
+
+        view.setUint16(ptr, 1, true); ptr += 2; // Bit count (2 bytes) - 32 for PNG with alpha
+        view.setUint16(ptr, 32, true); ptr += 2; // Bytes in resource (4 bytes)
+        view.setUint32(ptr, p.buf.byteLength, true); ptr += 4; // Image offset (4 bytes)
+        view.setUint32(ptr, offset, true); ptr += 4;
+
+        offset += p.buf.byteLength;
+      }
+
+      // Copy image data
+      let dataPtr = headerSize + dirEntrySize * count;
+      for (const p of pngBuffers) {
+        out8.set(p.buf, dataPtr);
+        dataPtr += p.buf.byteLength;
+      }
+
+      const icoBlob = new Blob([out8], { type: 'image/vnd.microsoft.icon' });
+      const url = URL.createObjectURL(icoBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `avatar-resizer-${Date.now()}.ico`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      this.app.showMessage('ICO file downloaded successfully');
+    } catch (err) {
+      console.error('downloadIco error', err);
+      this.app.showMessage('Failed to create ICO file', 'error');
     }
   }
 }
@@ -1511,6 +1582,7 @@ class AvatarResizerApp {
 
     $('processBtn').disabled = !hasImage || !hasSizes;
     $('downloadBtn').disabled = !hasProcessed;
+    $('downloadIcoBtn').disabled = !hasProcessed;
   }
 
   showMessage(text, type = 'success') {
