@@ -1128,7 +1128,55 @@ class ImageProcessor {
     const ctx = icoCanvas.getContext('2d');
     ctx.drawImage(canvas, 0, 0, size, size);
 
-    return picaInstance.toBlob(icoCanvas, 'image/png');
+    // Get PNG bytes
+    const pngBlob = await new Promise((resolve) => icoCanvas.toBlob(resolve, 'image/png'));
+    const pngBuf = await pngBlob.arrayBuffer();
+    const pngLen = pngBuf.byteLength;
+
+    // ICO header (6 bytes) + directory entry (16 bytes)
+    const headerSize = 6 + 16;
+    const totalSize = headerSize + pngLen;
+    const buffer = new ArrayBuffer(totalSize);
+    const view = new DataView(buffer);
+    let offset = 0;
+
+    // Reserved (2 bytes)
+    view.setUint16(offset, 0, true); // 0
+    offset += 2;
+    // Type (2 bytes) 1 = icon
+    view.setUint16(offset, 1, true);
+    offset += 2;
+    // Count (2 bytes)
+    view.setUint16(offset, 1, true);
+    offset += 2;
+
+    // Directory entry (16 bytes)
+    // Width (1 byte) - 0 means 256
+    view.setUint8(offset++, size >= 256 ? 0 : size);
+    // Height (1 byte)
+    view.setUint8(offset++, size >= 256 ? 0 : size);
+    // Color count (1 byte)
+    view.setUint8(offset++, 0);
+    // Reserved (1 byte)
+    view.setUint8(offset++, 0);
+    // Planes (2 bytes)
+    view.setUint16(offset, 1, true);
+    offset += 2;
+    // Bit count (2 bytes) - use 32 for RGBA PNG
+    view.setUint16(offset, 32, true);
+    offset += 2;
+    // Bytes in resource (4 bytes)
+    view.setUint32(offset, pngLen, true);
+    offset += 4;
+    // Image offset (4 bytes) - header + dir
+    view.setUint32(offset, headerSize, true);
+    offset += 4;
+
+    // Copy PNG bytes after header
+    const uint8 = new Uint8Array(buffer);
+    uint8.set(new Uint8Array(pngBuf), headerSize);
+
+    return new Blob([uint8], { type: 'image/vnd.microsoft.icon' });
   }
 
   generateFilename(originalFile, size, actualWidth, actualHeight) {
@@ -1249,12 +1297,19 @@ class Gallery {
   }
 
   downloadImage(result) {
+    // Create a transient object URL from the Blob to force download behavior
+    // (some browsers may navigate to certain mime types instead of
+    // downloading when using existing object URLs). Creating a fresh URL from
+    // the Blob and using the download attribute ensures the file is saved.
+    const url = URL.createObjectURL(result.blob);
     const a = document.createElement('a');
-    a.href = result.url;
+    a.href = url;
     a.download = result.filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    // Revoke the transient URL after a short timeout to allow the download to start
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 }
 
