@@ -390,7 +390,7 @@ class SizeConfiguration {
   }
 
   supportsTransparency() {
-    return ['png', 'webp', 'gif'].includes(this.format);
+    return ['png', 'webp', 'gif', 'ico'].includes(this.format);
   }
 }
 
@@ -752,7 +752,6 @@ class SizeEditor {
     $('shapeSelect').addEventListener('change', () => this.updateShapeSettings());
     $('centeringPresetSelect').addEventListener('change', () => this.updateCenteringSettings());
 
-
     this.setupSliders();
 
     $('editSizeModal').addEventListener('click', (e) => {
@@ -839,7 +838,7 @@ class SizeEditor {
     formatSettings.forEach((setting) => (setting.style.display = 'none'));
 
     const transparencySetting = $$('.transparency-setting');
-    if (['png', 'webp', 'gif'].includes(format)) {
+    if (['png', 'webp', 'gif', 'ico'].includes(format)) {
       transparencySetting.style.display = 'block';
     } else {
       transparencySetting.style.display = 'none';
@@ -1105,15 +1104,24 @@ class ImageProcessor {
   async canvasToBlob(canvas, size) {
     const format = OUTPUT_FORMATS[size.format];
 
-    if (size.format === 'ico') {
-      return this.canvasToIco(canvas);
-    }
-
     let quality;
     if (size.format === 'jpeg') {
       quality = size.jpegQuality / 100;
     } else if (size.format === 'webp') {
       quality = size.webpQuality / 100;
+    } else if (size.format === 'ico') {
+      const ua = navigator.userAgent || '';
+      const isFirefox =
+        ua.toLowerCase().includes('firefox') ||
+        ua.toLowerCase().includes('seamonkey') ||
+        ua.toLowerCase().includes('gecko/');
+
+      // Only Firefox supports canvas.toBlob() for ICO output natively
+      if (!isFirefox) {
+        return this.canvasToIco(canvas);
+      }
+
+      quality = '-moz-parse-options:format=png;bpp=32';
     }
 
     return picaInstance.toBlob(canvas, format.mime, quality);
@@ -1404,7 +1412,7 @@ class AvatarResizerApp {
   saveSettings() {
     const settings = {
       autoProcess: this.autoProcess,
-      isCompactView: this.sizeManager.isCompactView
+      isCompactView: this.sizeManager.isCompactView,
     };
     localStorage.setItem('avatarResizer_settings', JSON.stringify(settings));
   }
