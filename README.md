@@ -18,7 +18,7 @@ Browser based client‑side image resizing with multiple target sizes.
 
 ### Hosted version
 
-A hosted version is available at: <https://yellowcone.github.io/avatar-resizer/>
+A hosted version is available at: https://yellowclone.github.io/avatar-resizer/
 
 ### Local usage
 
