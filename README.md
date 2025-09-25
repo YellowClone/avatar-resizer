@@ -1,8 +1,8 @@
 # Avatar Resizer
 
-Client‑side image resizing with multiple target sizes in the browser.
+Browser based client‑side image resizing with multiple target sizes.
 
-## Highlights / Features
+## Features
 
 - 100% client-side: no uploads, works offline in the browser
 - Batch processing: produce many target sizes from one or multiple source images
@@ -45,18 +45,24 @@ A hosted version is available at: <https://yellowcone.github.io/avatar-resizer/>
 - Target sizes: Width and height (px)
 - Maintain aspect ratio: Toggle to keep original aspect ratio when resizing
 - Crop modes: Fit (contain), Fill (cover/crop), Stretch (ignore aspect)
-- Resize quality: High, Medium, Low, Fastest (Bicubic/Bilinear/Box/Nearest)
-- Output formats: PNG, JPEG, WebP
-  - Set quality and compression settings
+- Centering: Aligns the image in fill mode
+- Resize algorithm: High, Medium, Low, Fastest (Bicubic/Bilinear/Box/Nearest)
+- Output formats: PNG, JPEG, WebP, ICO
+  - Set quality and compression settings for JPEG and WebP
 - Shapes: Rectangle, Circle, Rounded rectangle
-- Centering: Top-Left, Top-Center, Top-Right, Center-Left, Center, Center-Right, Bottom-Left, Bottom-Center, Bottom-Right
 - Background color and optional transparency for shaped outputs
+- Corner radius: Set corner radius for rounded rectangle shapes
 - Filename pattern with placeholders: `{original_name}`, `{original_ext}`, `{original_format}`, `{original_width}`, `{original_height}`, `{name}`, `{width}`, `{height}`, `{crop_mode}`, `{centering}`, `{resize_quality}`, `{format}`, `{format_ext}`, `{format_quality}`, `{shape}`, `{background}`, `{date}`, `{time}`, `{timestamp}`
   - Upper/lower case formatting for text placeholders (e.g. `{name:upper}`, `{format_ext:lower}`)
   - Formatting for timestamps and dates in filename placeholders (e.g. `{timestamp:"YYYY-MM-DD HH:mm:ss"}`, `{date:YYYY-MM-DD}`, `{time:HH-mm-ss}`)
   - Zero-padding for number placeholders (e.g. `{width:4}` for 4-digit width)
 
-Default pattern: `{original_name}_{width}x{height}.{format_ext}`
+## Notes
+
+- Only the first frame of animated GIFs are processed; animations are not preserved
+- For transparent backgrounds use PNG/WebP and enable the Transparent Background option in the size editor
+- When creating ICO files, include square sizes (e.g., 16, 32, 48, 64, 128) for best compatibility
+- ICO files output using PNG format instead of BMP
 
 ## Dependencies
 
@@ -66,13 +72,6 @@ All third-party libraries are bundled locally under `js/lib/` so the app runs of
 - [PhotoSwipe](https://github.com/dimsemenov/PhotoSwipe) - image lightbox
 - [JSZip](https://github.com/Stuk/jszip) - ZIP archive builder
 - [DayJS](https://github.com/iamkun/dayjs) - date and time formatting
-
-## Notes
-
-- Only the first frame of animated GIFs is processed; animations are not preserved
-- For transparent backgrounds use PNG/WebP and enable the Transparent Background option in the size editor
-- When creating ICO files, include square sizes (e.g., 16, 32, 48, 64, 128) for best compatibility
-- ICO files output using PNG format instead of BMP
 
 ## License
 
