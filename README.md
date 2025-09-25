@@ -23,7 +23,7 @@ A hosted version is available at: <https://yellowcone.github.io/avatar-resizer/>
 ### Local usage
 
 1. Clone the repository or download it as a zip file.
-2. Open `index.html` in a web browser.
+2. Open `src/index.html` in a web browser.
 
 ## Usage
 
