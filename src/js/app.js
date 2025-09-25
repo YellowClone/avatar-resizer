@@ -186,6 +186,12 @@ function formatDateTime(date, format) {
   return dayjs(date).format(format);
 }
 
+function extractNameAndExt(filename) {
+  const idx = filename.lastIndexOf('.');
+  if (idx <= 0) return { name: filename, ext: '' };
+  return { name: filename.slice(0, idx), ext: filename.slice(idx + 1).toLowerCase() };
+}
+
 class ImageUploader {
   constructor(app) {
     this.app = app;
@@ -1415,9 +1421,21 @@ class DownloadManager {
 
     try {
       const zip = new JSZip();
+      const counts = new Map();
 
       for (const result of processedImages) {
-        zip.file(result.filename, result.blob);
+        let filename = result.filename;
+
+        if (counts.has(filename)) {
+          const { name, ext } = extractNameAndExt(filename);
+          const current = counts.get(filename) + 1;
+          counts.set(filename, current);
+          filename = `${name} (${current}).${ext}`;
+        } else {
+          counts.set(filename, 1);
+        }
+
+        zip.file(filename, result.blob);
       }
 
       const blob = await zip.generateAsync({ type: 'blob' });
