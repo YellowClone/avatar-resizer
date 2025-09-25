@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avatar Resizer - Bulk Image Resizing</title>
+
+    <!-- SEO Meta Tags -->
+    <meta
+      name="description"
+      content="Resize your avatar to multiple sizes for social media profiles. Privacy-focused client-side image resizing with PNG, JPEG, WebP support. Works offline, no uploads required."
+    />
+    <meta
+      name="keywords"
+      content="avatar resizer, image resize, bulk resize, PNG, JPEG, WebP, image processing, profile picture, avatar, social media"
+    />
+    <meta name="author" content="YellowClone" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://yellowclone.github.io/avatar-resizer/" />
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Avatar Resizer - Bulk Image Resizing" />
+    <meta
+      property="og:description"
+      content="Resize your avatar to multiple sizes for social media profiles. Privacy-focused client-side image resizing with PNG, JPEG, WebP support. Works offline, no uploads required."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://yellowclone.github.io/avatar-resizer/" />
+    <meta property="og:site_name" content="Avatar Resizer" />
+
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Avatar Resizer - Bulk Image Resizing" />
+    <meta
+      name="twitter:description"
+      content="Resize your avatar to multiple sizes for social media profiles. Privacy-focused client-side image resizing with PNG, JPEG, WebP support. Works offline, no uploads required."
+    />
+
+    <link rel="stylesheet" href="js/lib/photoswipe/photoswipe.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="header">
+        <div class="logo">🌸 Avatar Resizer</div>
+        <p class="subtitle">
+          A privacy-focused client-side image tool designed for resizing avatars for your social media profiles
+        </p>
+      </header>
+
+      <button class="theme-toggle" id="theme-toggle">
+        <span class="theme-toggle-icon" id="theme-toggle-icon">🌞</span>
+      </button>
+
+      <div class="main-content">
+        <div class="left-column">
+          <div class="upload-area-section" id="upload-area-section">
+            <div class="upload-area-content">
+              <div class="upload-icon">📁</div>
+              <div class="upload-text">Drop your image here</div>
+              <div class="upload-subtext">
+                or
+                <button type="button" class="browse-btn">browse files</button>
+                <input type="file" id="file-input" accept="image/*" multiple style="display: none" />
+              </div>
+              <div class="supported-formats">Supports: JPG, PNG, GIF, WebP, AVIF, BMP</div>
+            </div>
+          </div>
+
+          <div class="image-preview-section" id="image-preview-section" style="display: none">
+            <div class="image-preview-header section-header">
+              <h3>Image Preview</h3>
+              <button type="button" class="add-image-btn" id="add-image-btn">Add Image</button>
+            </div>
+            <div class="image-preview-content">
+              <img id="image-preview" class="image-preview" alt="Image preview" />
+              <div class="image-preview-info" id="image-preview-info"></div>
+            </div>
+          </div>
+
+          <div class="image-gallery-section" id="image-gallery-section" style="display: none">
+            <div class="image-gallery-content" id="image-gallery-content"></div>
+          </div>
+        </div>
+
+        <div class="right-column">
+          <div class="output-sizes-section">
+            <div class="section-header">
+              <h3>Output Sizes</h3>
+              <div class="config-buttons">
+                <button type="button" class="config-btn" id="compact-view-toggle" title="Toggle compact view">☰</button>
+                <button type="button" class="config-btn" id="export-config-btn">Export</button>
+                <button type="button" class="config-btn" id="import-config-btn">Import</button>
+                <input type="file" id="config-file-input" accept=".json" style="display: none" />
+              </div>
+            </div>
+            <div class="sizes-list" id="sizes-list"></div>
+            <button type="button" class="add-size-btn" id="add-size-btn">
+              <span class="add-icon">+</span> Add Size
+            </button>
+          </div>
+
+          <div class="actions-section">
+            <h3>Actions</h3>
+            <div class="auto-process-toggle">
+              <label class="toggle-label" for="auto-process-toggle">
+                <span class="toggle-text">Auto-process images</span>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="auto-process-toggle" class="toggle-input" checked />
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+            </div>
+            <button type="button" class="process-btn" id="process-btn" disabled>
+              <span class="process-icon">🔄</span>
+              <span class="process-text">Process Images</span>
+            </button>
+            <button type="button" class="download-btn" id="download-zip-btn" disabled>
+              <span class="download-icon">📦</span> Download as ZIP
+            </button>
+            <button type="button" class="download-btn" id="download-ico-btn" disabled>
+              <span class="download-icon">🪪</span> Download as ICO
+            </button>
+            <div class="repo-link">
+              <a
+                href="https://github.com/YellowClone/avatar-resizer"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View Avatar Resizer on GitHub"
+              >
+                <svg class="repo-link-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                  <path
+                    fill="currentColor"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+                  />
+                </svg>
+                <span>View on GitHub</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="processed-images-section" id="processed-images-section" style="display: none">
+        <div class="section-header">
+          <h3>Processed Images</h3>
+          <div class="processed-info" id="processed-info"></div>
+        </div>
+        <div class="processed-images-grid" id="processed-images-grid"></div>
+      </div>
+
+      <div class="modal-overlay" id="edit-size-modal" style="display: none">
+        <div class="modal">
+          <div class="modal-header">
+            <h3 id="modal-title">Edit Size</h3>
+            <button type="button" class="modal-close" id="modal-close-btn">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-section">
+              <h4>Basic Settings</h4>
+
+              <div class="form-group">
+                <label for="size-name-input">Name</label>
+                <input type="text" id="size-name-input" class="form-input" placeholder="Size name" />
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="width-input">Width (px)</label>
+                  <input type="number" id="width-input" class="form-input" min="1" placeholder="600" />
+                </div>
+                <div class="form-group">
+                  <label for="height-input">Height (px)</label>
+                  <input type="number" id="height-input" class="form-input" min="1" placeholder="600" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="transparency-toggle-label">
+                  <span class="transparency-text">Maintain aspect ratio</span>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="maintain-aspect-ratio-toggle" class="toggle-input" checked />
+                    <span class="toggle-slider"></span>
+                  </div>
+                </label>
+                <div class="form-help">
+                  When enabled, changing one dimension will automatically adjust the other to maintain proportions
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h4>Advanced Options</h4>
+
+              <div class="form-group">
+                <label for="crop-mode-select">Crop Mode</label>
+                <select id="crop-mode-select" class="form-select">
+                  <option value="fit">Fit (maintain aspect ratio)</option>
+                  <option value="fill">Fill (crop to exact size)</option>
+                  <option value="stretch">Stretch (ignore aspect ratio)</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="display: none">
+                <label for="centering-preset-select">Centering</label>
+                <select id="centering-preset-select" class="form-select">
+                  <option value="center">Center</option>
+                  <option value="top-left">Top-Left</option>
+                  <option value="top-center">Top-Center</option>
+                  <option value="top-right">Top-Right</option>
+                  <option value="center-left">Center-Left</option>
+                  <option value="center-right">Center-Right</option>
+                  <option value="bottom-left">Bottom-Left</option>
+                  <option value="bottom-center">Bottom-Center</option>
+                  <option value="bottom-right">Bottom-Right</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+
+              <div class="form-row" id="custom-centering-row" style="display: none">
+                <div class="form-group">
+                  <label for="horizontal-offset-input">Horizontal Offset (%)</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="horizontal-offset-input"
+                      class="quality-slider"
+                      min="0"
+                      max="100"
+                      value="50"
+                      step="1"
+                    />
+                    <span class="quality-value" id="horizontal-offset-value">50%</span>
+                  </div>
+                  <div class="form-help">0 = left, 50 = center, 100 = right</div>
+                </div>
+                <div class="form-group">
+                  <label for="vertical-offset-input">Vertical Offset (%)</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="vertical-offset-input"
+                      class="quality-slider"
+                      min="0"
+                      max="100"
+                      value="50"
+                      step="1"
+                    />
+                    <span class="quality-value" id="vertical-offset-value">50%</span>
+                  </div>
+                  <div class="form-help">0 = top, 50 = center, 100 = bottom</div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="quality-select">Resize Algorithm</label>
+                <select id="quality-select" class="form-select">
+                  <option value="3">High Quality (Bicubic)</option>
+                  <option value="2">Medium Quality (Bilinear)</option>
+                  <option value="1">Low Quality (Box)</option>
+                  <option value="0">Fastest (Nearest)</option>
+                </select>
+                <div class="form-help">
+                  Controls how the image is scaled. High quality produces smoother results but is slower.
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="format-select">Output Format</label>
+                <select id="format-select" class="form-select">
+                  <option value="png">PNG (best quality)</option>
+                  <option value="jpeg">JPEG (smaller size)</option>
+                  <option value="webp">WebP (modern format)</option>
+                  <!-- <option value="gif">GIF (animated/legacy)</option> -->
+                  <option value="ico">ICO (icon format)</option>
+                </select>
+              </div>
+
+              <div class="format-specific-settings">
+                <div class="form-group format-setting jpeg-setting" style="display: none">
+                  <label for="jpeg-quality-input">JPEG Quality</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="jpeg-quality-input"
+                      class="quality-slider"
+                      min="10"
+                      max="100"
+                      value="90"
+                      step="1"
+                    />
+                    <span class="quality-value" id="jpeg-quality-value">90%</span>
+                  </div>
+                  <div class="form-help">Higher values produce better quality but larger file sizes</div>
+                </div>
+
+                <div class="form-group format-setting webp-setting" style="display: none">
+                  <label for="webp-quality-input">WebP Quality</label>
+                  <div class="quality-slider-container">
+                    <input
+                      type="range"
+                      id="webp-quality-input"
+                      class="quality-slider"
+                      min="10"
+                      max="100"
+                      value="90"
+                      step="1"
+                    />
+                    <span class="quality-value" id="webp-quality-value">90%</span>
+                  </div>
+                  <div class="form-help">WebP typically produces smaller files than JPEG at similar quality</div>
+                </div>
+
+                <div class="form-group format-setting ico-setting" style="display: none">
+                  <div class="form-help">
+                    ICO format is optimized for small icon sizes. Best results with sizes 16x16, 32x32, 48x48, or 64x64
+                    pixels.
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="shape-select">Shape</label>
+                <select id="shape-select" class="form-select">
+                  <option value="rectangle">Rectangle</option>
+                  <option value="circle">Circle</option>
+                  <option value="rounded">Rounded Rectangle</option>
+                </select>
+              </div>
+
+              <div class="form-group" id="corner-radius-group" style="display: none">
+                <label for="corner-radius-input">Corner Radius (px)</label>
+                <input type="number" id="corner-radius-input" class="form-input" min="1" max="100" value="10" />
+                <div class="form-help">Radius for rounded rectangle corners</div>
+              </div>
+
+              <div class="form-group">
+                <label for="background-color-input">Background Color</label>
+                <input type="color" id="background-color-input" class="form-color" value="#ffffff" />
+                <div class="form-help">
+                  Used as background color for letterboxing in Fit mode, shaped outputs, and when transparency is
+                  disabled
+                </div>
+              </div>
+
+              <div class="form-group transparency-setting" style="display: none">
+                <label class="transparency-toggle-label">
+                  <span class="transparency-text">Transparent Background</span>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="transparent-background-toggle" class="toggle-input" />
+                    <span class="toggle-slider"></span>
+                  </div>
+                </label>
+                <div class="form-help">
+                  Makes the background transparent instead of using the background color. Useful for letterboxing in Fit
+                  mode and shaped outputs.
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="filename-pattern-input">Filename Pattern</label>
+                <input
+                  type="text"
+                  id="filename-pattern-input"
+                  class="form-input"
+                  placeholder="{original_name}_{width}x{height}.{format_ext}"
+                />
+                <div class="form-help">
+                  Available variables: {original_name}, {original_ext}, {original_format}, {original_width},
+                  {original_height}, {name}, {width}, {height}, {crop_mode}, {centering}, {resize_quality}, {format},
+                  {format_ext}, {format_quality}, {shape}, {background}, {date}, {time}, {timestamp}
+                </div>
+                <div class="form-help">
+                  Formatting options: {timestamp:"YYYY-MM-DD HH:mm:ss"}, {string:upper}, {string:lower}, {number:4}
+                  (e.g. 20 -> 0020)
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="modal-cancel-btn">Cancel</button>
+            <button type="button" class="btn-primary" id="modal-save-btn">Save Size</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <template id="image-gallery-item-tpl">
+      <div class="image-gallery-item">
+        <img class="image-gallery-img" src="" alt="" />
+        <div class="image-gallery-info">
+          <div class="image-gallery-name"></div>
+          <div class="image-gallery-details">
+            <div class="image-gallery-dimensions"></div>
+            <div class="image-gallery-size"></div>
+            <div class="image-gallery-format"></div>
+          </div>
+        </div>
+        <button type="button" class="image-gallery-close" title="Remove image">×</button>
+      </div>
+    </template>
+
+    <template id="processed-image-tpl">
+      <div class="processed-image-item">
+        <a href="#" class="processed-image-link">
+          <img class="processed-image" src="" alt="" />
+        </a>
+        <div class="processed-image-preview-info">
+          <div class="processed-image-name"></div>
+          <div class="processed-image-details">
+            <div class="processed-image-dimensions"></div>
+            <div class="processed-image-size"></div>
+            <div class="processed-image-format"></div>
+          </div>
+        </div>
+        <button type="button" class="processed-image-download" title="Download">
+          <span>📥</span>
+          <span>Download</span>
+        </button>
+      </div>
+    </template>
+
+    <template id="image-info-tpl">
+      <div class="image-dimensions"></div>
+      <div class="image-size"></div>
+      <div class="image-format"></div>
+    </template>
+
+    <template id="size-item-tpl">
+      <div class="size-item">
+        <div class="size-header">
+          <div class="size-info">
+            <span class="size-name"></span>
+            <span class="size-dimensions"></span>
+          </div>
+          <div class="size-actions">
+            <button type="button" class="size-action-btn edit-btn" title="Edit">✏️</button>
+            <button type="button" class="size-action-btn duplicate-btn" title="Duplicate">📋</button>
+            <button type="button" class="size-action-btn delete-btn" title="Delete">🗑️</button>
+          </div>
+        </div>
+        <div class="size-tags"></div>
+      </div>
+    </template>
+
+    <template id="size-tag-tpl">
+      <span class="size-tag"></span>
+    </template>
+
+    <template id="message-tpl">
+      <div class="app-message"></div>
+    </template>
+
+    <script src="js/lib/dayjs/dayjs.min.js"></script>
+    <script src="js/lib/pica/pica.min.js"></script>
+    <script src="js/lib/jszip/jszip.min.js"></script>
+    <script src="js/lib/photoswipe/photoswipe.umd.min.js"></script>
+    <script src="js/lib/photoswipe/photoswipe-lightbox.umd.min.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
