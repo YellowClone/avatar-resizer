@@ -1047,7 +1047,7 @@ class ImageProcessor {
     outputCtx.drawImage(resizedCanvas, rects.targetX, rects.targetY);
 
     if (size.shape === 'circle') this.applyCircleMask(outputCtx, outputCanvas, size);
-    else if (size.shape === 'rounded') this.applyRoundedMask(outputCtx, outputCanvas);
+    else if (size.shape === 'rounded') this.applyRoundedMask(outputCtx, outputCanvas, size);
 
     return outputCanvas;
   }
@@ -1169,8 +1169,8 @@ class ImageProcessor {
     ctx.putImageData(imageData, 0, 0);
   }
 
-  applyRoundedMask(ctx, canvas) {
-    const radius = Math.min(canvas.cornerRadius, canvas.width / 2, canvas.height / 2);
+  applyRoundedMask(ctx, canvas, size) {
+    const radius = Math.min(size.cornerRadius, canvas.width / 2, canvas.height / 2);
 
     ctx.globalCompositeOperation = 'destination-in';
     ctx.beginPath();
