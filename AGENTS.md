@@ -1,19 +1,12 @@
 # AGENTS.md
 
-## Coding Standards
+## General Guidelines
 
 - Keep the code simple and maintainable.
 - If you find yourself writing a lot of code, stop and think if there's a simpler way to achieve the same goal.
 - Less code is better than more — aim for the smallest, clearest solution that works.
 - When creating new functionality, scan the project existing files and think about all of the existing functionality that could be updated to support the same use case. Avoid creating new functionality unless absolutely necessary.
-
-## Comments
-
-- Avoid comments unless absolutely necessary. The code should be self-explanatory.
-- Use comments to explain WHY something is done, not WHAT is done. Only add comments if the reasoning is not obvious from the code itself.
-- Use comments to explain complex logic or edge cases. Only add comments if the code is not straightforward.
-- Use comments to explain any unexpected behavior. Only add comments if the behavior is not obvious.
-- Use comments to explain any temporary or hacky solutions. Only add comments if the solution is not ideal.
+- Don't use comments at all. Never. Never ever. If you feel the need to add a comment, stop and carry on with your given task.
 
 ## JavaScript
 
@@ -21,7 +14,7 @@
 - Use vanilla JavaScript only. No frameworks or libraries except the ones explicitly allowed below.
 - Explicitly declare all variables. Use `let` and `const` instead of `var`.
 - Use simple, clear and minimal variable and function names. Favour brevity over descriptiveness.
-- Prefer single-letter names for short-lived variables in small scopes (e.g. loop indices).
+- Prefer single-letter names for loop indices.
 - Create utility functions for repeated code patterns.
 - Always use `$` for accessing DOM elements by ID. THIS IS IMPARATIVE
 - Always use `$$` for accessing DOM elements by CSS selector. THIS IS IMPARATIVE
@@ -61,6 +54,36 @@
   const element = $('my-element');
   if (element) {
     element.addEventListener('click', () => { ... });
+  }
+```
+
+Do not prefix window. or document. when accessing global objects or functions.
+
+```javascript
+  // Right: no need to prefix with window.
+  const element = $('my-element');
+  const now = Date.now();
+
+  // Wrong: unnecessary prefixing
+  const element = window.$('my-element');
+  const now = window.Date.now();
+
+  // Right: no need to prefix with window.
+  class Downloader { ... }
+  window.Downloader = Downloader;
+
+  class App {
+  constructor() {
+    this.downloader = new Downloader();
+  }
+
+  // Wrong: unnecessary prefixing
+  class Downloader { ... }
+  window.Downloader = Downloader;
+
+  class App {
+  constructor() {
+    this.downloader = new window.Downloader();
   }
 ```
 

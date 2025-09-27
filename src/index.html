@@ -64,11 +64,12 @@
               <div class="upload-subtext">
                 or
                 <button type="button" class="browse-btn">browse files</button>
-                <input type="file" id="file-input" accept="image/*" multiple style="display: none" />
               </div>
               <div class="supported-formats">Supports: JPG, PNG, GIF, WebP, AVIF, BMP</div>
             </div>
           </div>
+
+          <input type="file" id="file-input" accept="image/*" multiple style="display: none" />
 
           <div class="image-preview-section" id="image-preview-section" style="display: none">
             <div class="image-preview-header section-header">
@@ -87,9 +88,9 @@
         </div>
 
         <div class="right-column">
-          <div class="output-sizes-section">
+          <div class="presets-section">
             <div class="section-header">
-              <h3>Output Sizes</h3>
+              <h3>Presets</h3>
               <div class="config-buttons">
                 <button type="button" class="config-btn" id="compact-view-toggle" title="Toggle compact view">☰</button>
                 <button type="button" class="config-btn" id="export-config-btn">Export</button>
@@ -97,9 +98,9 @@
                 <input type="file" id="config-file-input" accept=".json" style="display: none" />
               </div>
             </div>
-            <div class="sizes-list" id="sizes-list"></div>
-            <button type="button" class="add-size-btn" id="add-size-btn">
-              <span class="add-icon">+</span> Add Size
+            <div class="presets-list" id="presets-list"></div>
+            <button type="button" class="add-preset-btn" id="add-preset-btn">
+              <span class="add-icon">+</span> Add Preset
             </button>
           </div>
 
@@ -163,8 +164,8 @@
               <h4>Basic Settings</h4>
 
               <div class="form-group">
-                <label for="size-name-input">Name</label>
-                <input type="text" id="size-name-input" class="form-input" placeholder="Size name" />
+                <label for="preset-name-input">Name</label>
+                <input type="text" id="preset-name-input" class="form-input" placeholder="Size name" />
               </div>
 
               <div class="form-row">
@@ -428,25 +429,25 @@
       <div class="image-format"></div>
     </template>
 
-    <template id="size-item-tpl">
-      <div class="size-item">
-        <div class="size-header">
-          <div class="size-info">
-            <span class="size-name"></span>
-            <span class="size-dimensions"></span>
+    <template id="preset-item-tpl">
+      <div class="preset-item">
+        <div class="preset-header">
+          <div class="preset-info">
+            <span class="preset-name"></span>
+            <span class="preset-dimensions"></span>
           </div>
-          <div class="size-actions">
-            <button type="button" class="size-action-btn edit-btn" title="Edit">✏️</button>
-            <button type="button" class="size-action-btn duplicate-btn" title="Duplicate">📋</button>
-            <button type="button" class="size-action-btn delete-btn" title="Delete">🗑️</button>
+          <div class="preset-actions">
+            <button type="button" class="preset-action-btn edit-btn" title="Edit">✏️</button>
+            <button type="button" class="preset-action-btn duplicate-btn" title="Duplicate">📋</button>
+            <button type="button" class="preset-action-btn delete-btn" title="Delete">🗑️</button>
           </div>
         </div>
-        <div class="size-tags"></div>
+        <div class="preset-tags"></div>
       </div>
     </template>
 
-    <template id="size-tag-tpl">
-      <span class="size-tag"></span>
+    <template id="preset-tag-tpl">
+      <span class="preset-tag"></span>
     </template>
 
     <template id="message-tpl">
@@ -458,6 +459,16 @@
     <script src="js/lib/jszip/jszip.min.js"></script>
     <script src="js/lib/photoswipe/photoswipe.umd.min.js"></script>
     <script src="js/lib/photoswipe/photoswipe-lightbox.umd.min.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/loader.js"></script>
+    <script src="js/uploader.js"></script>
+    <script src="js/presets.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/processor.js"></script>
+    <script src="js/pipeline.js"></script>
+    <script src="js/original-gallery.js"></script>
+    <script src="js/processed-gallery.js"></script>
+    <script src="js/download.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

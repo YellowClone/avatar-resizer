@@ -156,6 +156,8 @@ Template placeholders support basic formatting options:
 - **Error Recovery**: Graceful handling of processing failures with user-friendly messages
 - **Performance Optimization**: Canvas reuse and async batch processing for efficient multi-image handling
 - **Processing State Management**: Prevents concurrent operations and provides visual feedback during batch processing
+- **Prevent Concurrent Operations**: Processing pipeline does not start if another operation is in progress
+- **Success Feedback**: Visual confirmation with processed image count
 
 ## Download Features
 
@@ -171,6 +173,7 @@ Template placeholders support basic formatting options:
 - **Organized Naming**: Consistent filename patterns
 - **ZIP Packaging**: All images bundled for easy distribution
 - **ICO Packaging**: Multiple icon sizes in single Windows icon file
+- **Packaging File Names**: Packaged ZIP and ICO file named `avatar-resizer-YYYYMMDDhhmmss.{ext}` (e.g., `avatar-resizer-20240115T143025.zip`)
 
 ## User Interface Features
 
@@ -295,3 +298,4 @@ Template placeholders support basic formatting options:
 - **File Management**: Easy switching between multiple loaded images
 
 This feature overview focuses on what users can accomplish with Avatar Resizer, emphasizing capabilities and user benefits rather than technical implementation details.
+

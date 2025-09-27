@@ -472,8 +472,8 @@ body.global-drag-over::after {
   display: flex;
 }
 
-/* Output Sizes Section */
-.output-sizes-section {
+/* Presets Section */
+.presets-section {
   margin-bottom: 1rem;
 }
 
@@ -512,14 +512,14 @@ body.global-drag-over::after {
 }
 
 /* Size List */
-.sizes-list {
+.presets-list {
   margin-bottom: 1rem;
   padding-right: 0.5rem;
   height: 264px;
   overflow-y: auto;
 }
 
-.size-item {
+.preset-item {
   transition: all 0.2s ease;
   cursor: move;
   margin-bottom: 0.75rem;
@@ -528,55 +528,55 @@ body.global-drag-over::after {
   padding: 1rem;
 }
 
-.size-item:hover {
+.preset-item:hover {
   background-color: var(--color-info-100);
 }
 
-.size-item.dragging {
+.preset-item.dragging {
   transform: rotate(5deg);
   opacity: 0.5;
 }
 
-.size-item.drag-over {
+.preset-item.drag-over {
   border: 2px dashed var(--color-info);
   background-color: var(--color-info-100);
 }
 
-.sizes-list.drag-active {
+.presets-list.drag-active {
   border: 2px dashed var(--color-info);
   border-radius: 8px;
   background-color: var(--color-info-100);
   padding: 0.5rem;
 }
 
-.size-header {
+.preset-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
 }
 
-.size-info {
+.preset-info {
   display: flex;
   flex-direction: column;
 }
 
-.size-name {
+.preset-name {
   color: var(--color-text);
   font-weight: 600;
 }
 
-.size-dimensions {
+.preset-dimensions {
   color: var(--color-muted);
   font-size: 0.9rem;
 }
 
-.size-actions {
+.preset-actions {
   display: flex;
   gap: 0.3rem;
 }
 
-.size-action-btn {
+.preset-action-btn {
   transition: all 0.2s ease;
   cursor: pointer;
   border: none;
@@ -585,7 +585,7 @@ body.global-drag-over::after {
   padding: 0.25rem;
 }
 
-.size-action-btn:hover {
+.preset-action-btn:hover {
   background-color: var(--shadow-2);
 }
 
@@ -601,13 +601,13 @@ body.global-drag-over::after {
   color: var(--color-danger);
 }
 
-.size-tags {
+.preset-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
 }
 
-.size-tag {
+.preset-tag {
   border: 1px solid var(--color-border);
   border-radius: 4px;
   background: var(--color-surface);
@@ -616,7 +616,7 @@ body.global-drag-over::after {
   font-size: 0.75rem;
 }
 
-.add-size-btn {
+.add-preset-btn {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -633,7 +633,7 @@ body.global-drag-over::after {
   font-size: 0.9rem;
 }
 
-.add-size-btn:hover {
+.add-preset-btn:hover {
   transform: translateY(-1px);
   background-color: var(--color-primary-600);
 }
@@ -643,41 +643,41 @@ body.global-drag-over::after {
 }
 
 /* Compact View Styles */
-.sizes-list.compact .size-item {
+.presets-list.compact .preset-item {
   margin-bottom: 0.5rem;
   padding: 0.5rem;
 }
 
-.sizes-list.compact .size-header {
+.presets-list.compact .preset-header {
   align-items: center;
   margin-bottom: 0;
 }
 
-.sizes-list.compact .size-info {
+.presets-list.compact .preset-info {
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
 }
 
-.sizes-list.compact .size-name {
+.presets-list.compact .preset-name {
   margin-bottom: 0;
   font-size: 0.9rem;
 }
 
-.sizes-list.compact .size-dimensions {
+.presets-list.compact .preset-dimensions {
   margin-left: 0;
   font-size: 0.8rem;
 }
 
-.sizes-list.compact .size-tags {
+.presets-list.compact .preset-tags {
   display: none;
 }
 
-.sizes-list.compact .size-actions {
+.presets-list.compact .preset-actions {
   gap: 0.25rem;
 }
 
-.sizes-list.compact .size-action-btn {
+.presets-list.compact .preset-action-btn {
   padding: 0.15rem;
   font-size: 0.8rem;
 }
