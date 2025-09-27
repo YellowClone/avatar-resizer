@@ -216,7 +216,6 @@ body.global-drag-over::after {
 }
 
 .right-column {
-  box-shadow: 0 2px 10px var(--shadow-1);
   border-radius: 12px;
   background: var(--color-surface);
   padding: 1.5rem;
@@ -280,7 +279,7 @@ body.global-drag-over::after {
   display: flex;
   flex-direction: column;
   margin-bottom: 1rem;
-  box-shadow: 0 2px 10px var(--shadow-1);
+
   border-radius: 12px;
   background: var(--color-surface);
   padding: 1.5rem;
@@ -334,7 +333,7 @@ body.global-drag-over::after {
 
 .image-preview {
   margin-bottom: 1rem;
-  box-shadow: 0 4px 12px var(--shadow-2);
+
   border-radius: 8px;
   max-width: 100%;
   max-height: 300px;
@@ -384,18 +383,12 @@ body.global-drag-over::after {
 .image-gallery-item {
   position: relative;
   flex: 0 0 200px;
-  transition: all 0.2s ease;
   cursor: pointer;
-  box-shadow: 0 2px 10px var(--shadow-1);
+
   border-radius: 12px;
   background: var(--color-surface);
   padding: 0.75rem;
   text-align: center;
-}
-
-.image-gallery-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px var(--shadow-2);
 }
 
 .image-gallery-item.active {
@@ -754,7 +747,6 @@ body.global-drag-over::after {
 }
 
 .toggle-slider:hover {
-  box-shadow: 0 2px 4px var(--shadow-2);
 }
 
 .process-btn {
@@ -832,7 +824,7 @@ body.global-drag-over::after {
 
 .processed-images-section .section-header {
   margin-bottom: 1rem;
-  box-shadow: 0 2px 10px var(--shadow-1);
+
   border-radius: 12px;
   background: var(--color-surface);
   padding: 1.5rem;
@@ -851,7 +843,7 @@ body.global-drag-over::after {
 
 .processed-image-item {
   transition: all 0.2s ease;
-  box-shadow: 0 2px 10px var(--shadow-1);
+
   border-radius: 12px;
   background: var(--color-surface);
   padding: 1rem;
@@ -860,7 +852,6 @@ body.global-drag-over::after {
 
 .processed-image-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px var(--shadow-2);
 }
 
 .processed-image-link {
@@ -941,7 +932,6 @@ body.global-drag-over::after {
 }
 
 .modal {
-  box-shadow: 0 10px 40px var(--shadow-4);
   border-radius: 12px;
   background: var(--color-surface);
   width: 100%;
@@ -1032,7 +1022,7 @@ body.global-drag-over::after {
 .form-input:focus,
 .form-select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px var(--color-focus-ring);
+
   border-color: var(--color-primary-500);
 }
 
@@ -1227,7 +1217,7 @@ body.global-drag-over::after {
   opacity: 0;
   z-index: 10001;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px var(--shadow-3);
+
   border-radius: 8px;
   background: var(--color-success);
   padding: 1rem 1.5rem;
